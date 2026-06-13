@@ -681,7 +681,35 @@ body { background-color: #0f172a !important; color: white !important; }
 #action_payload { display: none !important; }
 """
 
-with gr.Blocks(css=css, theme=gr.themes.Default(primary_hue="blue", neutral_hue="slate")) as app:
+head_js = """
+<script>
+  window.addEventListener("message", (event) => {
+      if (!event.data) return;
+      
+      if (event.data.type === "gradio_action") {
+          const textbox = document.querySelector('#action_payload textarea') || document.querySelector('#action_payload input');
+          if (textbox) {
+              const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set
+                  || Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+              if (nativeInputValueSetter) {
+                  nativeInputValueSetter.call(textbox, JSON.stringify(event.data.payload));
+              } else {
+                  textbox.value = JSON.stringify(event.data.payload);
+              }
+              textbox.dispatchEvent(new Event('input', { bubbles: true }));
+              textbox.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+      } else if (event.data.type === "resize_iframe") {
+          const iframe = document.querySelector('#output_html iframe');
+          if (iframe) {
+              iframe.style.height = event.data.height + 'px';
+          }
+      }
+  });
+</script>
+"""
+
+with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue", neutral_hue="slate")) as app:
     gr.Markdown("# 🖋️ HumanHumanHuman-nizer (Gradio ZeroGPU)")
     
     state_sentences = gr.State([])
@@ -699,35 +727,6 @@ with gr.Blocks(css=css, theme=gr.themes.Default(primary_hue="blue", neutral_hue=
             output_html = gr.HTML("<div style='color: #94a3b8; padding: 20px;'>L'analisi apparirà qui...</div>", elem_id="output_html")
             
     action_payload = gr.Textbox(elem_id="action_payload")
-    
-    # Script di comunicazione parent-iframe per Gradio registrato tramite app.load per assicurarne l'esecuzione
-    app.load(None, None, None, js="""
-    () => {
-      window.addEventListener("message", (event) => {
-          if (!event.data) return;
-          
-          if (event.data.type === "gradio_action") {
-              const textbox = document.querySelector('#action_payload textarea') || document.querySelector('#action_payload input');
-              if (textbox) {
-                  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set
-                      || Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-                  if (nativeInputValueSetter) {
-                      nativeInputValueSetter.call(textbox, JSON.stringify(event.data.payload));
-                  } else {
-                      textbox.value = JSON.stringify(event.data.payload);
-                  }
-                  textbox.dispatchEvent(new Event('input', { bubbles: true }));
-                  textbox.dispatchEvent(new Event('change', { bubbles: true }));
-              }
-          } else if (event.data.type === "resize_iframe") {
-              const iframe = document.querySelector('#output_html iframe');
-              if (iframe) {
-                  iframe.style.height = event.data.height + 'px';
-              }
-          }
-      });
-    }
-    """)
     
     analyze_btn.click(
         fn=do_stream_all,
