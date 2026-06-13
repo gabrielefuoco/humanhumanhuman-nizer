@@ -282,40 +282,24 @@ if not st.session_state.processed_sentences and not st.session_state.to_process:
             st.session_state.processed_sentences = []
             st.rerun()
 
-# --- LOOP DI STREAMING ---
+# --- LOOP DI STREAMING (1 frase alla volta per non bloccare il server) ---
+needs_rerun = False
 if len(st.session_state.to_process) > 0:
-    progress_bar = st.progress(0)
-    status_text = st.empty()
-    preview_box = st.empty()
-    
     total_sentences = len(st.session_state.to_process) + len(st.session_state.processed_sentences)
+    current = len(st.session_state.processed_sentences) + 1
     
-    while len(st.session_state.to_process) > 0:
-        sentence_text = st.session_state.to_process.pop(0)
-        s_data = process_sentence(sentence_text)
-        st.session_state.processed_sentences.append(s_data)
-        
-        current = len(st.session_state.processed_sentences)
-        progress_bar.progress(current / total_sentences)
-        status_text.markdown(f"⏳ *Elaborazione in corso... Frase {current} di {total_sentences}*")
-        
-        # Mostra una preview testuale in tempo reale mentre processa
-        preview_html = "<div style='line-height: 1.9; font-size: 16px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 10px;'>"
-        for s in st.session_state.processed_sentences:
-            bg_color = "rgba(248, 113, 113, 0.2)" if s["isCritical"] else "transparent"
-            border = "border-bottom: 1px dashed rgba(248, 113, 113, 0.5);" if s["isCritical"] else ""
-            preview_html += f"<span style='background-color: {bg_color}; {border} padding: 2px 0; border-radius: 4px;'>{s['text']}</span> "
-        preview_html += "</div>"
-        
-        preview_box.markdown(preview_html, unsafe_allow_html=True)
-        
-    status_text.empty()
-    progress_bar.empty()
-    preview_box.empty()
-    st.rerun()
+    st.markdown(f"⏳ *Elaborazione in corso... Frase {current} di {total_sentences}*")
+    progress_bar = st.progress(current / total_sentences)
+    
+    # Processa UNA SOLA frase
+    sentence_text = st.session_state.to_process.pop(0)
+    s_data = process_sentence(sentence_text)
+    st.session_state.processed_sentences.append(s_data)
+    
+    needs_rerun = True
 
 # --- EDITOR E METRICHE ---
-if st.session_state.processed_sentences and len(st.session_state.to_process) == 0:
+if st.session_state.processed_sentences:
     # Metriche Globali
     burstiness = calculate_burstiness(st.session_state.processed_sentences)
     c_m1, c_m2 = st.columns(2)
@@ -399,3 +383,7 @@ if st.session_state.processed_sentences and len(st.session_state.to_process) == 
             st.session_state.processed_sentences = []
             st.session_state.to_process = []
             st.rerun()
+
+# Chiama il rerun alla fine per far aggiornare il frontend e poi ripartire
+if needs_rerun:
+    st.rerun()
