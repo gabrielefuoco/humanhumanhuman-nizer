@@ -157,6 +157,13 @@ def create_docx(text):
     doc.save(bio)
     return bio.getvalue()
 
+def extract_text_from_file(uploaded_file):
+    if uploaded_file.name.endswith(".docx"):
+        doc = Document(uploaded_file)
+        return "\n".join([p.text for p in doc.paragraphs])
+    else:
+        return uploaded_file.read().decode("utf-8", errors="ignore")
+
 # --- INIZIALIZZAZIONE STATO ---
 if "words_data" not in st.session_state:
     st.session_state.words_data = []
@@ -177,7 +184,13 @@ with col1:
     st.subheader("Editor Interattivo 📝")
     st.caption("Fai **Click Destro** sulle parole rosse per aprire il dizionario dei sinonimi NLTK.")
     
-    input_text = st.text_area("Incolla qui il testo sospetto e clicca 'Analizza'", height=150, key="input_raw")
+    uploaded_file = st.file_uploader("📂 Carica un documento (TXT, MD, DOCX, TEX)", type=["txt", "md", "docx", "tex"])
+    if uploaded_file is not None:
+        if "last_uploaded_file" not in st.session_state or st.session_state.last_uploaded_file != uploaded_file.name:
+            st.session_state.input_raw = extract_text_from_file(uploaded_file)
+            st.session_state.last_uploaded_file = uploaded_file.name
+            
+    input_text = st.text_area("Oppure incolla qui il testo sospetto e clicca 'Analizza'", height=150, key="input_raw")
     
     if st.button("🔍 Analizza Metriche e Token"):
         if input_text:
