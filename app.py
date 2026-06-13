@@ -56,7 +56,75 @@ tokenizer, model = load_local_model()
 # --- COMPONENTE CUSTOM FRONTEND ---
 interactive_text = components.declare_component("interactive_text", path="frontend")
 
-# --- FUNZIONI CORE ---
+AI_CLICHES = [
+    "delve", "tapestry", "testament", "underscore", "vibrant", "landscape", "pivotal", "showcase", "intricate", "crucial",
+    "fostering", "garner", "highlight", "interplay", "emphasizing", "enduring", "enhance",
+    "approfondire", "arazzo", "testimonianza", "sottolineare", "vibrante", "panorama", "paesaggio", "cruciale", "mostrare", "intricato",
+    "promuovere", "raccogliere", "interazione", "enfatizzare", "duraturo", "migliorare", "immersione", "immergiamoci"
+]
+
+SYSTEM_PROMPT_HUMANIZER = """
+You are a writing editor that identifies and removes signs of AI-generated text to make writing sound more natural and human. This guide is based on Wikipedia's "Signs of AI writing" page.
+
+When given text to humanize:
+1. Identify AI patterns - Scan for the patterns listed below.
+2. Rewrite, don't delete - Replace AI-isms with natural alternatives.
+3. Preserve meaning - Keep the core message intact.
+4. Match the voice - Fit the intended tone.
+
+## PERSONALITY AND SOUL
+- Have opinions. React to facts.
+- Vary your rhythm. Mix short punchy sentences with longer ones.
+- Let some mess in. Perfect structure feels algorithmic.
+
+## CONTENT PATTERNS
+1. Undue Emphasis on Significance: Avoid "stands/serves as", "is a testament", "pivotal moment".
+2. Superficial Analyses with -ing Endings: Avoid "highlighting/underscoring/emphasizing...", "showcasing...".
+3. Promotional Language: Avoid "vibrant", "profound", "breathtaking", "in the heart of".
+4. Outline-like "Challenges and Future Prospects" Sections: Avoid formulaic "Despite these challenges".
+
+## LANGUAGE AND GRAMMAR PATTERNS
+5. Overused "AI Vocabulary" Words: Avoid Actually, additionally, align with, crucial, delve, emphasizing, enduring, enhance, fostering, garner, highlight, interplay, intricate, key, landscape, pivotal, showcase, tapestry, testament, underscore, valuable, vibrant.
+6. Copula Avoidance: Use "is/are" instead of "serves as/boasts/features".
+7. Rule of Three Overuse: Do not force ideas into groups of three.
+8. Elegant Variation: Do not excessively substitute synonyms.
+9. Passive Voice: Use active voice.
+
+## STYLE PATTERNS
+10. Em Dashes: The final rewrite contains no em dashes (—) or en dashes (–). Use commas or periods instead.
+11. Overuse of Boldface: Do not mechanically emphasize phrases in boldface.
+12. Inline-Header Vertical Lists: Avoid lists where items start with bolded headers followed by colons.
+13. Emojis: Do not decorate headings or bullet points with emojis.
+14. Curly Quotation Marks: Use straight quotes ("...") instead of curly quotes (“...”).
+
+## COMMUNICATION PATTERNS
+15. Collaborative Artifacts: DO NOT output "I hope this helps", "Here is a...".
+16. Knowledge-Cutoff Disclaimers: DO NOT say "As of my last update".
+
+## FILLER AND HEDGING
+17. Filler Phrases: Use "To achieve this" instead of "In order to achieve this goal".
+18. Excessive Hedging: Avoid "It could potentially possibly be argued".
+19. Generic Positive Conclusions: Avoid vague upbeat endings.
+20. Persuasive Authority Tropes: Avoid "The real question is", "At its core".
+21. Signposting: Avoid "Let's dive in", "Here's what you need to know".
+
+Deliver ONLY the final rewrite. Do NOT output any "Here is the rewritten text" or explanations.
+"""
+
+def apply_algorithmic_rules(text):
+    if not text: return text
+    # Regola 14: Em Dashes and En Dashes
+    text = text.replace("—", ", ").replace("–", ", ")
+    text = text.replace(" — ", ", ").replace(" -- ", ", ")
+    
+    # Regola 15: Overuse of Boldface (rimuove il ** testuale)
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+    
+    # Regola 19: Curly Quotation Marks
+    text = text.replace("“", '"').replace("”", '"')
+    
+    return text
+
 def calculate_perplexity(text):
     if not text.strip(): return 0.0
     encodings = tokenizer(text, return_tensors="pt")
@@ -105,10 +173,12 @@ def analyze_text_token_by_token(text):
         
         clean_w = "".join(c for c in w if c.isalpha())
         is_low_ppl = (ppl < 15.0 and len(clean_w) > 3)
+        is_cliche = clean_w.lower() in AI_CLICHES
         
         words_data.append({
             "word": w,
-            "isLowPpl": is_low_ppl
+            "isLowPpl": is_low_ppl,
+            "isCliche": is_cliche
         })
     return words_data
 
@@ -139,13 +209,17 @@ def rewrite_with_mistral(text):
     if not MISTRAL_API_KEY:
         return "Errore: MISTRAL_API_KEY non trovata nei Secrets."
     client = Mistral(api_key=MISTRAL_API_KEY)
-    prompt = f"Riscrivi in modo naturale e umano. Alterna frasi corte e lunghe. Evita cliché. Testo:\n{text}"
     try:
         response = client.chat.complete(
             model="mistral-small-latest",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT_HUMANIZER},
+                {"role": "user", "content": f"Riscrivi il seguente testo secondo le linee guida anti-AI. Testo:\n\n{text}"}
+            ]
         )
-        return response.choices[0].message.content
+        raw_output = response.choices[0].message.content
+        # Applica le regole matematiche (Hard Rules)
+        return apply_algorithmic_rules(raw_output)
     except Exception as e:
         return f"Errore Mistral API: {e}"
 
