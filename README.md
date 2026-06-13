@@ -3,7 +3,7 @@ title: Humanhumanhuman Nizer
 emoji: ✨
 colorFrom: blue
 colorTo: purple
-sdk: docker
+sdk: gradio
 pinned: false
 app_port: 7860
 ---
