@@ -1,0 +1,4 @@
+streamlit
+mistralai
+torch
+transformers
