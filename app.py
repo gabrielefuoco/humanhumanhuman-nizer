@@ -21,7 +21,7 @@ nltk.download('omw-1.4', quiet=True)
 MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY", "")
 
 # --- INIZIALIZZAZIONE MODELLO (CARICATO SU CUDA A LIVELLO GLOBALE PER ZEROGPU) ---
-model_id = "Qwen/Qwen2.5-0.5B"
+model_id = "Qwen/Qwen3.5-0.8B"
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 
 try:
