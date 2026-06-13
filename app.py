@@ -348,13 +348,11 @@ def build_html(processed_sentences, synonyms_payload=None):
     
     <script>
       function sendToGradio(payload) {{
-          if (window.parent && window.parent.document) {{
-              const textbox = window.parent.document.querySelector('#action_payload textarea');
-              if(textbox) {{
-                  textbox.value = JSON.stringify(payload);
-                  textbox.dispatchEvent(new Event('input', {{ bubbles: true }}));
-              }}
-          }}
+          window.parent.postMessage({{ type: "gradio_action", payload: payload }}, "*");
+      }}
+      
+      function requestResize(extraHeight = 50) {{
+          window.parent.postMessage({{ type: "resize_iframe", height: document.body.scrollHeight + extraHeight }}, "*");
       }}
   
       let currentSIdx = null;
@@ -420,10 +418,8 @@ def build_html(processed_sentences, synonyms_payload=None):
               }}
           }}
           
-          // Auto-resize iframe height
-          if(window.frameElement) {{
-              window.frameElement.style.height = (document.body.scrollHeight + 100) + 'px';
-          }}
+          // Request resize after rendering
+          setTimeout(() => {{ requestResize(50); }}, 50);
       }}
   
       function showContextMenu(x, y, sIdx, wIdx, word) {{
@@ -441,6 +437,8 @@ def build_html(processed_sentences, synonyms_payload=None):
           }} else {{
               renderSynonymsMenu(synonymsPayload.syns_scores);
           }}
+          
+          requestResize(150);
       }}
   
       function renderSynonymsMenu(syns) {{
@@ -466,12 +464,14 @@ def build_html(processed_sentences, synonyms_payload=None):
               menu.appendChild(item);
           }});
           menu.style.display = "block";
+          requestResize(150);
       }}
   
       document.addEventListener("click", () => {{
           document.getElementById("context-menu").style.display = "none";
       }});
       
+      window.addEventListener("resize", () => {{ requestResize(50); }});
       renderText();
     </script>
     </body>
@@ -549,21 +549,28 @@ def do_stream_all(file_obj, raw_text):
 
 @spaces.GPU(duration=60)
 def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
+    print("=" * 50)
+    print(f"[DEBUG] handle_ui_action CHIAMATO con payload: {payload_str}")
     if not payload_str:
+        print("[DEBUG] Payload vuoto, ritorno default")
         return processed_sentences, build_html(processed_sentences), payload_str
         
     try:
         action_data = json.loads(payload_str)
         action = action_data.get("action")
+        print(f"[DEBUG] Azione decodificata: {action}")
         
         if action == "get_synonyms":
             s_idx = action_data["sentence_idx"]
             w_idx = action_data["word_idx"]
             word = action_data["word"]
+            print(f"[DEBUG] get_synonyms per parola '{word}' a frase {s_idx}, parola {w_idx}")
             context_sentence = processed_sentences[s_idx]["text"]
             
             syns = get_offline_synonyms(word, context_sentence)
+            print(f"[DEBUG] Sinonimi trovati: {syns}")
             syns_scores = calculate_synonym_scores(processed_sentences[s_idx], w_idx, syns)
+            print(f"[DEBUG] Punteggi calcolati: {syns_scores}")
             
             synonyms_payload = {
                 "s_idx": s_idx,
@@ -576,6 +583,7 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
             s_idx = action_data["sentence_idx"]
             w_idx = action_data["word_idx"]
             new_word = action_data["new_word"]
+            print(f"[DEBUG] replace_word a frase {s_idx}, parola {w_idx} con '{new_word}'")
             
             s = processed_sentences[s_idx]
             old_word = s["words"][w_idx]["word"]
@@ -590,9 +598,11 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
         elif action == "rewrite_sentence":
             s_idx = action_data["sentence_idx"]
             old_text = action_data["text"]
+            print(f"[DEBUG] rewrite_sentence a frase {s_idx}: '{old_text}'")
             
             s_data = processed_sentences[s_idx]
             new_text = rewrite_with_mistral(old_text, sentence_data=s_data)
+            print(f"[DEBUG] Riscritto da Mistral: '{new_text}'")
             
             original_text = processed_sentences[s_idx].get("original_text", old_text)
             reprocessed = process_sentence(new_text, latex_reg, is_latex)
@@ -603,6 +613,7 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
     except Exception as e:
         import traceback
         err = traceback.format_exc()
+        print(f"[DEBUG] ERRORE in handle_ui_action: {err}")
         return processed_sentences, f"<div style='color: red;'><b>ERRORE:</b><pre>{err}</pre></div>", ""
         
     return processed_sentences, build_html(processed_sentences), ""
@@ -634,7 +645,7 @@ def export_doc(processed_sentences, latex_reg, is_latex):
 
 css = """
 body { background-color: #0f172a !important; color: white !important; }
-.gradio-container { max-width: 1200px !important; }
+.gradio-container { max-width: 95% !important; width: 95% !important; }
 #action_payload { display: none !important; }
 """
 
@@ -653,9 +664,31 @@ with gr.Blocks(css=css, theme=gr.themes.Default(primary_hue="blue", neutral_hue=
             export_btn = gr.DownloadButton("Scarica Documento Humanized 📥")
             
         with gr.Column(scale=2):
-            output_html = gr.HTML("<div style='color: #94a3b8; padding: 20px;'>L'analisi apparirà qui...</div>")
+            output_html = gr.HTML("<div style='color: #94a3b8; padding: 20px;'>L'analisi apparirà qui...</div>", elem_id="output_html")
             
     action_payload = gr.Textbox(elem_id="action_payload")
+    
+    # Script di comunicazione parent-iframe per Gradio
+    gr.HTML("""
+    <script>
+      window.addEventListener("message", (event) => {
+          if (!event.data) return;
+          
+          if (event.data.type === "gradio_action") {
+              const textbox = document.querySelector('#action_payload textarea') || document.querySelector('#action_payload input');
+              if (textbox) {
+                  textbox.value = JSON.stringify(event.data.payload);
+                  textbox.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+          } else if (event.data.type === "resize_iframe") {
+              const iframe = document.querySelector('#output_html iframe');
+              if (iframe) {
+                  iframe.style.height = event.data.height + 'px';
+              }
+          }
+      });
+    </script>
+    """)
     
     analyze_btn.click(
         fn=do_stream_all,
