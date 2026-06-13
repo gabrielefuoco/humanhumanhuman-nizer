@@ -19,6 +19,11 @@ jobs:
         run: |
           set -e
 
+          if [ -z "${HF_TOKEN}" ]; then
+            echo "HF_TOKEN non configurato: sincronizzazione verso Hugging Face saltata."
+            exit 0
+          fi
+
           echo "Pulizia dei file non necessari per la produzione..."
           # Aggiungi qui eventuali file da ignorare durante il push su HF (opzionale)
 
