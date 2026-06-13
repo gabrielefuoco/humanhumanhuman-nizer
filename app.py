@@ -512,8 +512,15 @@ def parse_input_text(file_obj, raw_text):
     latex_registry = {}
     
     if file_obj is not None:
-        content = open(file_obj.name, "rb").read()
-        filename = file_obj.name.lower()
+        if isinstance(file_obj, str):
+            filepath = file_obj
+            filename = os.path.basename(filepath).lower()
+            content = open(filepath, "rb").read()
+        else:
+            filepath = file_obj.name
+            filename = os.path.basename(filepath).lower()
+            content = open(filepath, "rb").read()
+            
         if filename.endswith(".tex"):
             try:
                 decoded = content.decode("utf-8")
