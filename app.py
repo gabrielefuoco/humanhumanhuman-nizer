@@ -3,6 +3,10 @@ import os
 import torch
 import difflib
 import nltk
+import re
+import math
+from io import BytesIO
+from docx import Document
 from nltk.corpus import wordnet as wn
 import streamlit.components.v1 as components
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -21,6 +25,11 @@ st.markdown("""
     .stTextArea textarea:focus { border: 1px solid #3b82f6 !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
     .stButton>button { background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important; border: none !important; color: white !important; border-radius: 8px !important; padding: 12px 24px !important; font-weight: 600 !important; width: 100%; }
     .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(139, 92, 246, 0.3) !important; }
+    .metric-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); margin-top: 10px;}
+    .metric-title { font-size: 12px; color: #94a3b8; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+    .metric-value { font-size: 24px; font-weight: bold; margin-top: 5px; }
+    .metric-human { color: #4ade80; }
+    .metric-ai { color: #f87171; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -56,8 +65,18 @@ def calculate_perplexity(text):
         outputs = model(input_ids, labels=input_ids)
     return round(torch.exp(outputs.loss).item(), 2)
 
+def calculate_burstiness(text):
+    if not text.strip(): return 0.0
+    sentences = re.split(r'[.!?]+', text)
+    sentences = [s.strip() for s in sentences if s.strip()]
+    if len(sentences) < 2: return 0.0
+    lengths = [len(s.split()) for s in sentences]
+    mean = sum(lengths) / len(lengths)
+    variance = sum((x - mean) ** 2 for x in lengths) / len(lengths)
+    return round(math.sqrt(variance), 2)
+
 def analyze_text_token_by_token(text):
-    """Calcola la perplexity per le singole parole usando un allineamento semplificato."""
+    """Calcola la perplexity per le singole parole."""
     if not text.strip(): return []
     
     encodings = tokenizer(text, return_tensors="pt")
@@ -75,8 +94,6 @@ def analyze_text_token_by_token(text):
     text_words = text.split()
     words_data = []
     
-    # Allineamento euristico semplice 1 parola = 1 o più token
-    # Qui simuliamo la mappatura leggendo progressivamente le loss
     token_idx = 0
     for w in text_words:
         word_loss = 10.0
@@ -86,7 +103,6 @@ def analyze_text_token_by_token(text):
             
         ppl = torch.exp(torch.tensor(word_loss)).item()
         
-        # Una parola è considerata "Ai-like" se è molto prevedibile (< 15) e lunga
         clean_w = "".join(c for c in w if c.isalpha())
         is_low_ppl = (ppl < 15.0 and len(clean_w) > 3)
         
@@ -133,15 +149,27 @@ def rewrite_with_mistral(text):
     except Exception as e:
         return f"Errore Mistral API: {e}"
 
+def create_docx(text):
+    doc = Document()
+    doc.add_heading("Riscrittura The Humanizer Pipeline", 0)
+    doc.add_paragraph(text)
+    bio = BytesIO()
+    doc.save(bio)
+    return bio.getvalue()
+
 # --- INIZIALIZZAZIONE STATO ---
 if "words_data" not in st.session_state:
     st.session_state.words_data = []
 if "original_raw_text" not in st.session_state:
     st.session_state.original_raw_text = ""
+if "current_ppl" not in st.session_state:
+    st.session_state.current_ppl = 0.0
+if "current_burst" not in st.session_state:
+    st.session_state.current_burst = 0.0
 
 # --- UI PRINCIPALE ---
 st.title("✨ The Humanizer Pipeline")
-st.markdown("Analizza la prevedibilità statistica del testo (*Perplexity*) parola per parola e sostituisci interattivamente i cliché AI con sinonimi dal dizionario NLTK.")
+st.markdown("Analizza **Perplexity** e **Burstiness**, e usa l'Editor Interattivo per mascherare i tuoi testi dai rilevatori AI.")
 
 col1, col2 = st.columns([1, 1], gap="large")
 
@@ -149,19 +177,30 @@ with col1:
     st.subheader("Editor Interattivo 📝")
     st.caption("Fai **Click Destro** sulle parole rosse per aprire il dizionario dei sinonimi NLTK.")
     
-    # Campo di input per il testo iniziale
     input_text = st.text_area("Incolla qui il testo sospetto e clicca 'Analizza'", height=150, key="input_raw")
     
-    if st.button("🔍 Analizza Token-by-Token"):
+    if st.button("🔍 Analizza Metriche e Token"):
         if input_text:
-            with st.spinner("Analisi dei tensori in corso..."):
+            with st.spinner("Analisi Statistica in corso..."):
                 st.session_state.original_raw_text = input_text
+                st.session_state.current_ppl = calculate_perplexity(input_text)
+                st.session_state.current_burst = calculate_burstiness(input_text)
                 st.session_state.words_data = analyze_text_token_by_token(input_text)
                 st.rerun()
     
+    if st.session_state.current_ppl > 0:
+        c_m1, c_m2 = st.columns(2)
+        with c_m1:
+            color_class = "metric-human" if st.session_state.current_ppl > 30 else "metric-ai"
+            st.markdown(f"""<div class='metric-box'><div class='metric-title'>Perplexity Score</div>
+                        <div class='metric-value {color_class}'>{st.session_state.current_ppl}</div></div>""", unsafe_allow_html=True)
+        with c_m2:
+            color_class2 = "metric-human" if st.session_state.current_burst > 5 else "metric-ai"
+            st.markdown(f"""<div class='metric-box'><div class='metric-title'>Burstiness (Varianza Frasi)</div>
+                        <div class='metric-value {color_class2}'>{st.session_state.current_burst}</div></div>""", unsafe_allow_html=True)
+    
     st.divider()
     
-    # Render del componente custom solo se ci sono dati
     if st.session_state.words_data:
         if "synonyms_payload" in st.session_state:
             payload = st.session_state.synonyms_payload
@@ -180,17 +219,14 @@ with col1:
                 key="interactive_editor"
             )
             
-        # Gestione eventi dal frontend custom
         if component_value:
             if component_value.get("action") == "get_synonyms":
                 word_id = component_value["word_id"]
                 word = component_value["word"]
                 
-                # Calcola offline i sinonimi e i loro score PPL nel contesto
                 syns = get_offline_synonyms(word)
                 syns_scores = calculate_synonym_scores(st.session_state.words_data, word_id, syns)
                 
-                # Salviamo il payload per aggiornare il frontend
                 st.session_state.synonyms_payload = {
                     "word_id": word_id,
                     "synonyms_list": syns_scores
@@ -202,6 +238,11 @@ with col1:
                 new_word = component_value["new_word"]
                 st.session_state.words_data[word_id]["word"] = new_word
                 st.session_state.words_data[word_id]["isLowPpl"] = False
+                
+                # Ricalcola le metriche
+                new_full_text = " ".join([w["word"] for w in st.session_state.words_data])
+                st.session_state.current_ppl = calculate_perplexity(new_full_text)
+                st.session_state.current_burst = calculate_burstiness(new_full_text)
                 st.rerun()
 
 with col2:
@@ -211,15 +252,23 @@ with col2:
         st.session_state.rewritten_text = ""
 
     if st.button("🪄 Riscrivi intero testo con Mistral"):
-        # Ricostruiamo il testo da mandare a Mistral (prende l'ultima versione dell'editor interattivo)
         current_text = " ".join([w["word"] for w in st.session_state.words_data]) if st.session_state.words_data else st.session_state.original_raw_text
         if current_text:
             with st.spinner("Connessione in corso a Mistral API..."):
                 st.session_state.rewritten_text = rewrite_with_mistral(current_text)
 
     edited_text = st.text_area(
-        "Modifica manualmente il risultato se necessario:", 
+        "Modifica manualmente o esporta il risultato:", 
         value=st.session_state.rewritten_text, 
         height=350,
         key="manual_edit"
     )
+
+    if edited_text:
+        st.caption("Esporta il risultato:")
+        c_dl1, c_dl2 = st.columns(2)
+        with c_dl1:
+            st.download_button("⬇️ Scarica .TXT", data=edited_text, file_name="riscrittura.txt", mime="text/plain", use_container_width=True)
+        with c_dl2:
+            docx_data = create_docx(edited_text)
+            st.download_button("⬇️ Scarica .DOCX", data=docx_data, file_name="riscrittura.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
