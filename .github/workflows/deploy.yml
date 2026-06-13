@@ -1,4 +1,4 @@
-name: Sync to Hugging Face hub
+name: Sync to Hugging Face Hub
 on:
   push:
     branches: [main]
@@ -8,13 +8,43 @@ jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: true
-      - name: Push to hub
+          lfs: false
+
+      - name: Prepare and Push to Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add space https://gabri:$HF_TOKEN@huggingface.co/spaces/gabri/humanhumanhuman-nizer
-          git push --force space main
+          set -e
+
+          echo "Pulizia dei file non necessari per la produzione..."
+          # Aggiungi qui eventuali file da ignorare durante il push su HF (opzionale)
+
+          rm -rf .git
+          git init
+          git checkout -b main
+
+          git config user.name "GitHub Action"
+          git config user.email "actions@github.com"
+
+          echo "Configurazione di Git LFS per modelli o file pesanti..."
+          git lfs install
+          git lfs track "*.mp4"
+          git lfs track "*.png"
+          git lfs track "*.jpg"
+          git lfs track "*.jpeg"
+
+          echo "Creazione del pacchetto di deploy..."
+          git add .gitattributes
+          git add .
+          git commit -m "🚀 Auto-deploy from GitHub Actions"
+
+          # Utilizzo il tuo username Gabriele-fuoco e il nome del nuovo progetto
+          git remote add hf "https://Gabriele-fuoco:${HF_TOKEN}@huggingface.co/spaces/Gabriele-fuoco/humanhumanhuman-nizer"
+          git config http.postBuffer 1048576000
+          git config http.version HTTP/1.1
+
+          echo "Inviando codice e file multimediali LFS a Hugging Face..."
+          git -c protocol.version=0 push -f hf main || { echo "Force push to Hugging Face failed. Check HF_TOKEN and remote connectivity."; exit 1; }
