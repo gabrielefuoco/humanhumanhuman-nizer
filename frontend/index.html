@@ -16,6 +16,11 @@
         border-bottom: 1px dashed #f87171; 
         font-weight: 600;
     }
+    .word.cliche { 
+        color: #eab308; 
+        border-bottom: 1px dashed #eab308; 
+        font-weight: 600;
+    }
     .word:hover { background-color: rgba(255,255,255,0.1); border-radius: 3px; }
     
     #context-menu {
@@ -66,11 +71,15 @@
         wordsData.forEach((w, i) => {
             let span = document.createElement("span");
             span.textContent = w.word + " ";
-            span.className = "word" + (w.isLowPpl ? " low-ppl" : "");
+            
+            let classes = ["word"];
+            if (w.isLowPpl) classes.push("low-ppl");
+            if (w.isCliche) classes.push("cliche");
+            span.className = classes.join(" ");
             span.dataset.id = i;
             
             span.addEventListener("contextmenu", (e) => {
-                if(w.isLowPpl) {
+                if(w.isLowPpl || w.isCliche) {
                     e.preventDefault();
                     showContextMenu(e.pageX, e.pageY, i);
                 }
