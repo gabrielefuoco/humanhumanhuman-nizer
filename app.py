@@ -10,8 +10,23 @@ from nltk.corpus import wordnet as wn
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import requests
 import gradio as gr
-import spaces
 from latex_parser import mask_latex, unmask_latex
+
+# Rileva se siamo su HF Spaces (ZeroGPU) o su Colab/locale
+IS_HF_SPACES = os.environ.get("SPACE_ID") is not None
+try:
+    import spaces
+    if not IS_HF_SPACES:
+        raise ImportError("Not on HF Spaces")
+except ImportError:
+    # Su Colab/locale, creiamo un decoratore finto che non fa nulla
+    class _FakeSpaces:
+        @staticmethod
+        def GPU(duration=60):
+            def decorator(fn):
+                return fn
+            return decorator
+    spaces = _FakeSpaces()
 
 # --- SCARICO RISORSE NLTK ---
 nltk.download('wordnet', quiet=True)
@@ -510,20 +525,20 @@ def do_stream_all(file_obj, raw_text):
         sentences = split_into_sentences(text)
         
         if not sentences:
-            yield [], "<div style='color: red; padding: 20px;'>Nessun testo inserito o trovato.</div>", {}, False
-            return
+            return [], "<div style='color: red; padding: 20px;'>Nessun testo inserito o trovato.</div>", {}, False
             
         processed_sentences = []
         
         for s in sentences:
             s_data = process_sentence(s, latex_registry, is_latex)
             processed_sentences.append(s_data)
-            yield processed_sentences, build_html(processed_sentences), latex_registry, is_latex
+            
+        return processed_sentences, build_html(processed_sentences), latex_registry, is_latex
             
     except Exception as e:
         import traceback
         err = traceback.format_exc()
-        yield [], f"<div style='color: red; padding: 20px;'><b>ERRORE DI SISTEMA:</b><br><pre>{err}</pre></div>", {}, False
+        return [], f"<div style='color: red; padding: 20px;'><b>ERRORE DI SISTEMA:</b><br><pre>{err}</pre></div>", {}, False
 
 @spaces.GPU(duration=60)
 def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
