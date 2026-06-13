@@ -86,9 +86,25 @@
 <body>
   <div id="text-container"></div>
   <div id="context-menu"></div>
-  
-  <script src="https://unpkg.com/streamlit-component-lib@1.3.0/dist/streamlit.js"></script>
   <script>
+    const Streamlit = {
+        setComponentReady: function() {
+            window.parent.postMessage({ isStreamlitMessage: true, type: "streamlit:componentReady", apiVersion: 1 }, "*");
+        },
+        setFrameHeight: function(height) {
+            window.parent.postMessage({ isStreamlitMessage: true, type: "streamlit:setFrameHeight", height: height || document.body.scrollHeight }, "*");
+        },
+        setComponentValue: function(value) {
+            window.parent.postMessage({ isStreamlitMessage: true, type: "streamlit:setComponentValue", value: value, dataType: "json" }, "*");
+        }
+    };
+
+    window.addEventListener("message", function(event) {
+        if (event.data && event.data.type === "streamlit:render") {
+            onRender(event.data);
+        }
+    });
+
     let currentSIdx = null;
     let currentWIdx = null;
     let sentencesData = [];
@@ -188,8 +204,8 @@
         document.getElementById("context-menu").style.display = "none";
     });
 
-    function onRender(event) {
-        const data = event.detail.args;
+    function onRender(eventData) {
+        const data = eventData.args;
         
         if (data.synonyms_update) {
             const cacheKey = data.synonyms_s_idx + "_" + data.synonyms_w_idx;
@@ -209,7 +225,6 @@
         Streamlit.setFrameHeight();
     }
 
-    Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onRender);
     Streamlit.setComponentReady();
     Streamlit.setFrameHeight();
   </script>
