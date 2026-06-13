@@ -275,77 +275,42 @@ def rewrite_with_mistral(text, sentence_data=None):
 
 # --- FUNZIONI GRADIO ---
 
+import html
+
 def build_html(processed_sentences, synonyms_payload=None):
-    """
-    Costruisce l'interfaccia utente JS/CSS integrata con Gradio.
-    """
     sentences_json = json.dumps(processed_sentences).replace("'", "\\'")
     synonyms_json = json.dumps(synonyms_payload) if synonyms_payload else "null"
     
-    html = f"""
+    inner_html = f"""
+    <html>
+    <head>
     <style>
-      .text-container {{
-          font-family: 'Inter', sans-serif; 
-          background-color: transparent; 
-          color: #f8fafc; 
-          padding: 20px; 
-          line-height: 1.9;
-          font-size: 16px;
-      }}
+      body {{ font-family: 'Inter', sans-serif; background-color: transparent; color: #f8fafc; padding: 20px; line-height: 1.9; font-size: 16px; margin: 0; overflow-y: auto; }}
       .sentence {{
-          position: relative;
-          display: block;
-          margin-bottom: 12px;
-          padding: 16px 20px;
-          padding-right: 150px;
-          background-color: rgba(255, 255, 255, 0.03);
-          border-radius: 8px;
-          border-left: 4px solid #3b82f6;
-          transition: background 0.2s, transform 0.1s;
+          position: relative; display: block; margin-bottom: 12px; padding: 16px 20px;
+          padding-right: 150px; background-color: rgba(255, 255, 255, 0.03);
+          border-radius: 8px; border-left: 4px solid #3b82f6; transition: background 0.2s, transform 0.1s;
       }}
       .sentence:hover {{ background-color: rgba(255, 255, 255, 0.05); }}
-      .sentence.critical {{
-          background-color: rgba(248, 113, 113, 0.05);
-          border-left: 4px solid #ef4444;
-      }}
+      .sentence.critical {{ background-color: rgba(248, 113, 113, 0.05); border-left: 4px solid #ef4444; }}
       .sentence.critical:hover {{ background-color: rgba(248, 113, 113, 0.1); }}
       .sentence:hover .rewrite-btn {{ display: inline-block; }}
       
       .rewrite-btn {{
-          display: none; 
-          position: absolute; 
-          top: 16px; 
-          right: 16px; 
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
-          color: white;
-          font-size: 12px; 
-          padding: 6px 12px; 
-          border-radius: 12px; 
-          cursor: pointer; 
-          box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-          white-space: nowrap; 
-          font-weight: bold; 
-          z-index: 100;
-          user-select: none;
+          display: none; position: absolute; top: 16px; right: 16px; 
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white;
+          font-size: 12px; padding: 6px 12px; border-radius: 12px; cursor: pointer; 
+          box-shadow: 0 4px 10px rgba(0,0,0,0.5); white-space: nowrap; font-weight: bold; 
+          z-index: 100; user-select: none;
       }}
       .sentence.critical .rewrite-btn {{ background: linear-gradient(135deg, #ef4444, #f59e0b); }}
       .rewrite-btn:hover {{ transform: translateY(-2px); filter: brightness(1.1); }}
       
       .metrics-badge {{
-          font-size: 11px;
-          color: rgba(255,255,255,0.5);
-          background: rgba(0,0,0,0.2);
-          padding: 2px 6px;
-          border-radius: 4px;
-          margin-left: 6px;
-          vertical-align: middle;
-          user-select: none;
+          font-size: 11px; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.2);
+          padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; user-select: none;
       }}
-      .sentence.critical .metrics-badge {{
-          color: #f87171;
-          background: rgba(248, 113, 113, 0.1);
-          border: 1px solid rgba(248, 113, 113, 0.3);
-      }}
+      .sentence.critical .metrics-badge {{ color: #f87171; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); }}
   
       .word {{ cursor: pointer; transition: color 0.2s; padding: 0 1px; display: inline-block; }}
       .word.low-ppl {{ color: #f87171; font-weight: 600; }}
@@ -353,41 +318,28 @@ def build_html(processed_sentences, synonyms_payload=None):
       .word:hover {{ background-color: rgba(255,255,255,0.1); border-radius: 3px; }}
       
       #context-menu {{
-        display: none;
-        position: fixed;
-        background: #1e293b;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        z-index: 9999;
-        padding: 5px 0;
-        min-width: 150px;
+        display: none; position: fixed; background: #1e293b; border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 9999; padding: 5px 0; min-width: 150px;
       }}
-      .menu-item {{
-        padding: 8px 15px;
-        cursor: pointer;
-        color: #e2e8f0;
-        font-size: 14px;
-      }}
+      .menu-item {{ padding: 8px 15px; cursor: pointer; color: #e2e8f0; font-size: 14px; }}
       .menu-item:hover {{ background: #3b82f6; color: white; }}
-      .menu-item .score {{
-        float: right; font-size: 11px; color: #94a3b8; margin-left: 10px;
-      }}
+      .menu-item .score {{ float: right; font-size: 11px; color: #94a3b8; margin-left: 10px; }}
       .menu-item:hover .score {{ color: #e0f2fe; }}
       .loader {{ padding: 8px 15px; font-size: 12px; color: #94a3b8; font-style: italic; }}
     </style>
-    
+    </head>
+    <body>
     <div class="text-container" id="text-container"></div>
     <div id="context-menu"></div>
     
     <script>
       function sendToGradio(payload) {{
-          // Cerca la textarea nascosta inserita da Gradio
-          const textbox = document.querySelector('#action_payload textarea');
-          if(textbox) {{
-              textbox.value = JSON.stringify(payload);
-              // Trigger l'evento change di Gradio
-              textbox.dispatchEvent(new Event('input', {{ bubbles: true }}));
+          if (window.parent && window.parent.document) {{
+              const textbox = window.parent.document.querySelector('#action_payload textarea');
+              if(textbox) {{
+                  textbox.value = JSON.stringify(payload);
+                  textbox.dispatchEvent(new Event('input', {{ bubbles: true }}));
+              }}
           }}
       }}
   
@@ -453,6 +405,11 @@ def build_html(processed_sentences, synonyms_payload=None):
                   renderSynonymsMenu(synonymsPayload.syns_scores);
               }}
           }}
+          
+          // Auto-resize iframe height
+          if(window.frameElement) {{
+              window.frameElement.style.height = (document.body.scrollHeight + 100) + 'px';
+          }}
       }}
   
       function showContextMenu(x, y, sIdx, wIdx, word) {{
@@ -503,8 +460,12 @@ def build_html(processed_sentences, synonyms_payload=None):
       
       renderText();
     </script>
+    </body>
+    </html>
     """
-    return html
+    
+    escaped_html = html.escape(inner_html)
+    return f'<iframe srcdoc="{escaped_html}" width="100%" style="min-height: 800px; border: none; overflow: hidden;" scrolling="yes"></iframe>'
 
 def parse_input_text(file_obj, raw_text):
     text = ""
