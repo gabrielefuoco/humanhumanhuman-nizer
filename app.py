@@ -10,7 +10,6 @@ from nltk.corpus import wordnet as wn
 import streamlit.components.v1 as components
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import requests
-from mistralai import Mistral
 from latex_parser import mask_latex, unmask_latex
 
 # --- SETUP DI BASE ---
