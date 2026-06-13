@@ -199,7 +199,30 @@ def process_sentence(sentence_text):
         "aiScore": ai_score
     }
 
-def get_offline_synonyms(word):
+def get_mistral_synonyms(word, context_sentence):
+    if not MISTRAL_API_KEY: return []
+    url = "https://api.mistral.ai/v1/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": f"Bearer {MISTRAL_API_KEY}"
+    }
+    data = {
+        "model": "mistral-small-latest",
+        "messages": [
+            {"role": "system", "content": "Sei un dizionario dei sinonimi. Restituisci SOLO una lista di 5 sinonimi per la parola richiesta, separati da virgola. Nessun'altra parola o punteggiatura extra."},
+            {"role": "user", "content": f"Fornisci 5 sinonimi per la parola '{word}' nel contesto di questa frase: '{context_sentence}'"}
+        ]
+    }
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        raw_output = response.json()["choices"][0]["message"]["content"]
+        return [s.strip() for s in raw_output.split(",") if s.strip()]
+    except:
+        return []
+
+def get_offline_synonyms(word, context_sentence=""):
     clean_word = "".join(c for c in word if c.isalpha()).lower()
     synsets = wn.synsets(clean_word, lang='ita')
     syns = set()
@@ -207,7 +230,10 @@ def get_offline_synonyms(word):
         for lemma in syn.lemma_names('ita'):
             if lemma.lower() != clean_word:
                 syns.add(lemma.replace('_', ' '))
-    return list(syns)[:5]
+    syns_list = list(syns)[:5]
+    if not syns_list and context_sentence:
+        syns_list = get_mistral_synonyms(clean_word, context_sentence)
+    return syns_list
 
 def calculate_synonym_scores(sentence_data, word_idx, synonyms):
     results = []
@@ -228,10 +254,25 @@ def calculate_synonym_scores(sentence_data, word_idx, synonyms):
     results.sort(key=lambda x: x["score"], reverse=True)
     return results
 
-def rewrite_with_mistral(text):
+def rewrite_with_mistral(text, sentence_data=None):
     if not MISTRAL_API_KEY:
         return text
     
+    prompt = f"Riscrivi la seguente frase problematica in modo che sembri 100% scritta da un essere umano. Testo:\n\n{text}"
+    
+    if sentence_data:
+        suggestions = []
+        for i, w_dict in enumerate(sentence_data["words"]):
+            if w_dict.get("isLowPpl") or w_dict.get("isCliche"):
+                syns = get_offline_synonyms(w_dict["word"], text)
+                if syns:
+                    scores = calculate_synonym_scores(sentence_data, i, syns)
+                    if scores:
+                        top_syns = ", ".join([f"{s['word']} (PPL: {round(s['score'], 1)})" for s in scores[:3]])
+                        suggestions.append(f"- {w_dict['word']}: {top_syns}")
+        if suggestions:
+            prompt += "\n\nPer aiutarti a bypassare i detector AI, ecco dei sinonimi ad altissima perplexity raccomandati per sostituire le parole incriminate. Cerca di usarli nel testo in modo naturale e grammaticalmente coerente:\n" + "\n".join(suggestions)
+            
     url = "https://api.mistral.ai/v1/chat/completions"
     headers = {
         "Content-Type": "application/json",
@@ -242,7 +283,7 @@ def rewrite_with_mistral(text):
         "model": "mistral-small-latest",
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT_HUMANIZER},
-            {"role": "user", "content": f"Riscrivi la seguente frase problematica in modo che sembri 100% scritta da un essere umano. Testo:\n\n{text}"}
+            {"role": "user", "content": prompt}
         ]
     }
     try:
@@ -370,8 +411,9 @@ if st.session_state.processed_sentences:
                 s_idx = component_value["sentence_idx"]
                 w_idx = component_value["word_idx"]
                 word = component_value["word"]
+                context_sentence = st.session_state.processed_sentences[s_idx]["text"]
                 
-                syns = get_offline_synonyms(word)
+                syns = get_offline_synonyms(word, context_sentence)
                 syns_scores = calculate_synonym_scores(st.session_state.processed_sentences[s_idx], w_idx, syns)
                 
                 st.session_state.synonyms_payload = {
@@ -400,8 +442,9 @@ if st.session_state.processed_sentences:
                 s_idx = component_value["sentence_idx"]
                 old_text = component_value["text"]
                 
-                # Riscrivi con Mistral
-                new_text = rewrite_with_mistral(old_text)
+                # Riscrivi con Mistral passandogli i dati della frase
+                s_data = st.session_state.processed_sentences[s_idx]
+                new_text = rewrite_with_mistral(old_text, sentence_data=s_data)
                 
                 # Processa e rimpiazza in-place
                 original_text = st.session_state.processed_sentences[s_idx].get("original_text", old_text)
