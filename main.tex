@@ -1,0 +1,3258 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{enumitem}
+\usepackage{comment}
+\usepackage{geometry}
+\usepackage{hyperref}
+\geometry{margin=3cm}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=black}
+
+
+\setcounter{tocdepth}{1}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+
+\newcommand{\R}{\mathbb R}
+\newcommand{\N}{\mathbb N}
+\newcommand{\dd}{\,d}
+\newcommand{\PV}{\operatorname{P.V.}}
+\newcommand{\dist}{\operatorname{dist}}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\Lip}{\operatorname{Lip}}
+\newcommand{\loc}{\mathrm{loc}}
+
+\title{\bfseries\LARGE Overdetermined Singular Problems\\[0.25em]
+for the Fractional Laplacian}
+\author{Daniel Baratta \and Francesco Esposito \and Berardino Sciunzi}
+\date{}
+
+\begin{document}
+
+\begin{center}
+\vspace*{0.4cm}
+\makebox[0pt][c]{%
+{\rmfamily\bfseries\fontsize{15.3}{18.4}\selectfont Overdetermined Singular Problems for the Fractional Laplacian}%
+}\par
+\vspace{0.75cm}
+{\large Daniel Baratta, Francesco Esposito, Berardino Sciunzi\par}
+\vspace{0.85cm}
+\end{center}
+
+\begin{abstract}
+In this paper we study an overdetermined problem for the fractional Laplacian in a bounded domain with an isolated non-removable singularity. More precisely we consider positive solutions of
+\[
+\begin{cases}
+(-\Delta)^s u=f(u) & \text{in }\Omega\setminus\{0\},\\
+u=0 & \text{in }\R^N\setminus\Omega,\\
+(\partial_\eta)^s u=c & \text{on }\partial\Omega,
+\end{cases}
+\]
+where \(0<s<1\), \(N>2s\), \(0\in\Omega\), \(c<0\) and \((\partial_\eta)^s\) denotes the fractional normal derivative. We prove a fractional counterpart of the singular overdetermined rigidity theorem of Esposito, Sciunzi and Soave: if a positive solution with a non-removable singularity at the origin exists, then \(\Omega\) is a ball centered at the origin and the solution is radial and radially decreasing. In the torsion case \(f\equiv1\), we obtain the explicit decomposition
+\[
+u(x)=\tau_{R}(x)+k G_{R}(x,0),
+\]
+where \(\tau_{R}\) is the fractional torsion function in \(B_R\) and \(G_{R}\) is the Green function of the fractional Laplacian in \(B_R\).
+\end{abstract}
+
+%\tableofcontents
+
+% ------------------------------------------------------------
+\section{Introduction and main results}
+\label{sec:introduction}
+% ------------------------------------------------------------
+
+Overdetermined boundary value problems are a classical source of rigidity phenomena in elliptic partial differential equations. The milestone is Serrin's symmetry theorem \cite{Serrin}: if a bounded smooth domain \(\Omega\subset\R^N\) admits a positive solution of
+\[
+\begin{cases}
+-\Delta u=1 & \text{in }\Omega,\\
+u=0 & \text{on }\partial\Omega,\\
+\partial_\nu u=\text{constant} & \text{on }\partial\Omega,
+\end{cases}
+\]
+then \(\Omega\) is a ball and \(u\) is radially symmetric. Serrin's proof is based on the method of moving planes and on the use of the maximum principle, Hopf's boundary lemma and a corner lemma. This technique has become a fundamental tool in the analysis of symmetry and rigidity for elliptic equations.
+
+\
+
+In the fractional framework, Fall and Jarohs proved an analogue of Serrin's theorem for the restricted fractional Laplacian \cite{FallJarohs}. They considered overdetermined problems of the form
+\[
+\begin{cases}
+(-\Delta)^s u=f(u) & \text{in }\Omega,\\
+u=0 & \text{in }\R^N\setminus\Omega,\\
+(\partial_\eta)^s u=c & \text{on }\partial\Omega,
+\end{cases}
+\]
+where \((\partial_\eta)^s\) is the fractional normal derivative. Their proof adapts the moving plane method to nonlocal equations through maximum principles for antisymmetric functions, together with a fractional Hopf lemma and a fractional corner lemma. These tools will play a central role in the this paper.
+
+\
+
+A different direction was developed by Esposito, Sciunzi and Soave in the local singular setting \cite{ESS}. They studied overdetermined problems for the classical Laplacian in punctured domains, where the solution has a non-removable isolated singularity at the origin. In that setting, the overdetermined condition forces the domain to be a ball centered at the singular point. In the torsion case, their argument also yields an explicit decomposition of the solution into a regular torsion part and a singular fundamental part.
+
+\
+
+The goal of this paper is to combine the last two topic. We study a fractional overdetermined problem with an isolated non-removable singularity. More precisely, we consider
+\begin{equation}\label{eq:main problem}
+\begin{cases}
+(-\Delta)^s u=f(u) & \text{in }\Omega\setminus\{0\},\\
+u>0 & \text{in }\Omega\setminus\{0\},\\
+u=0 & \text{in }\R^N\setminus\Omega,\\
+(\partial_\eta)^s u=c & \text{on }\partial\Omega,
+\end{cases}
+\end{equation}
+where \(0<s<1\), \(N>2s\), \(c<0\), \(\Omega\subset\R^N\) is a bounded \(C^2\) domain with \(0\in\Omega\), and \(f\in\Lip_{\loc}(\R_+)\). The assumption \(N>2s\) is natural in the singular fractional setting. In this range the fundamental singularity has the power-type behaviour \(|x|^{2s-N}\), and a point has zero fractional \(s\)-capacity. The last fact is essential for the capacity-cutoff argument that allows us to remove the original pole and its reflected pole in the moving plane procedure.
+
+\
+
+The nonlocal comparison argument is inspired by the work of Montoro, Punzo and Sciunzi in \cite{MPS}. In their work, capacity cutoffs are used to deal with singular sets of zero fractional capacity. In the present problem, the moving plane creates a new difficulty: if \(T_\lambda\) is the moving hyperplane, then the reflected function \(u_\lambda\) has its pole at the reflected point \(0^\lambda\). Hence the comparison function \(w_\lambda=u_\lambda-u\) may be singular at the moving point. A substantial part of the proof is devoted to adapting the capacity-cutoff method of Montoro, Punzo and Sciunzi \cite{MPS} to this moving singular configuration.
+
+\
+
+We also need boundary regularity in order to give a precise meaning to the overdetermined condition. In order to do this, we use the boundary regularity theory of Ros-Oton and Serra for the fractional Dirichlet problem \cite{RosOtonSerra}. Since the pole is strictly inside the domain, a cutoff procedure with explicit
+control of the nonlocal commutator and tail terms shows that the boundary
+quotient \(u/\delta^s\) is still Holder continuous near \(\partial\Omega\). 
+
+\
+
+After the symmetry result has been obtained, the singular part is classified by means of a fractional Bocher-type theorem by using the result of Li, Wu and Xu \cite{LiWuXu}. The explicit torsion and Green function formulas in the ball are recalled using the Boggio's representation, as presented as an example by Abatangelo, Jarohs and Salda\~na in \cite{AbatangeloJarohsSaldana} or by Bucur in \cite{Bucur}.
+
+\
+
+Our first main result is the following  Serrin-type theorem:
+
+\begin{theorem}\label{main}
+Let \(0<s<1\) and \(N>2s\). Let \(\Omega\subset\R^N\) be a bounded domain of class \(C^2\) such that \(0\in\Omega\). Let \(f\in\Lip_{\loc}(\R_+)\), and let \(u\) be a positive solution of \eqref{eq:main problem} with a non-removable singularity at the origin. Then there exists \(R>0\) such that
+\[
+\Omega=B_R(0)
+\]
+and $u$ is radially symmetric and decreasing.
+\end{theorem}
+
+Once we proved that the domain is a ball, the singular part can be described through the Green function. In the torsion case this gives the following explicit decomposition:
+
+\begin{corollary}
+\label{torsion}
+Assume that the hypotheses of Theorem~\ref{main} hold and that \(f\equiv1\). Then \(\Omega=B_R(0)\) and
+\[
+u(x)=\tau_{R}(x)+k G_{R}(x,0),
+\]
+where \(\tau_{R}\) is the unique solution of the torsion problem
+\[
+\begin{cases}
+(-\Delta)^s\tau_{R}=1 & \text{in }B_R,\\
+\tau_{R}=0 & \text{in }\R^N\setminus B_R,
+\end{cases}
+\]
+and \(G_{R}\) is the Green function of \((-\Delta)^s\) in \(B_R\) with zero exterior datum. Moreover,
+\[
+k=
+\frac{sR^{N-s}}{c_{N,s}2^s}
+\left(-c-\gamma_{N,s}(2R)^s\right)>0,
+\]
+where
+\[
+\gamma_{N,s}
+=
+4^{-s}
+\frac{\Gamma(N/2)}{\Gamma(N/2+s)\Gamma(1+s)}.
+\]
+\end{corollary}
+
+
+The paper is organized as follows. In Section~\ref{sec:preliminaries} we state the notation and we recall
+some preliminary results that will be useful to prove our result. In Section \ref{sec:boundary-quotient-singular} we prove the boundary regularity needed to interpret the overdetermined condition in presence of the interior pole and we prove the comparison principles needed to run the moving-plane method in the presence of the reflected pole. In Section \ref{moving plane} we prove Theorem \ref{main}. Finally, in Section \ref{sec:torsion} we prove Corollary \ref{torsion} and prove consequences of the Green decomposition.
+
+% ------------------------------------------------------------
+\section{Preliminaries}
+\label{sec:preliminaries}
+% ------------------------------------------------------------
+
+In this section we fix the notation and recall the tools that are used later.
+
+\begin{assumption}
+Throughout this work we fix \(0<s<1\) and \(N>2s\). Let \(\Omega\subset\R^N\) be a bounded \(C^2\) domain with \(0\in\Omega\), and let \(f\in\Lip_{\loc}(\R_+)\). We assume that
+\[
+u\in W^{s,2}_{\loc}(\R^N\setminus\{0\})
+\cap L^1_s(\R^N)
+\cap C(\R^N\setminus\{0\})
+\]
+satisfies
+\[
+\begin{cases}
+(-\Delta)^s u=f(u) & \text{in }\Omega\setminus\{0\},\\
+u>0 & \text{in }\Omega\setminus\{0\},\\
+u=0 & \text{in }\R^N\setminus\Omega,\\
+(\partial_\eta)^s u=c & \text{on }\partial\Omega,
+\end{cases}
+\]
+where \(c<0\), and that the origin is a non-removable isolated singularity of
+\(u\).
+\end{assumption}
+
+\begin{remark}
+The restriction \(N>2s\) is made for two reasons. It gives the power-type behaviour \(|x|^{2s-N}\) of the fundamental singularity and ensures that points have zero fractional \(s\)-capacity. The last property is what permits the capacity cutoffs around the pole and around its reflected image in the moving plane argument.
+\end{remark}
+\subsection{Fractional Laplacian and weak solutions}
+
+For a sufficiently regular function \(u:\R^N\to\R\), we define
+\begin{equation}\label{eq:strong definition}
+(-\Delta)^s u(x)=c_{N,s}\PV\int_{\R^N}\frac{u(x)-u(y)}{|x-y|^{N+2s}}\dd y.
+\end{equation}
+The corresponding bilinear form is
+\begin{equation}\label{eq:weak form}
+\mathcal E(u,v)=\frac{c_{N,s}}2\int_{\R^N}\int_{\R^N}
+\frac{(u(x)-u(y))(v(x)-v(y))}{|x-y|^{N+2s}}\dd x\dd y.
+\end{equation}
+The operator in \eqref{eq:strong definition} and the form in \eqref{eq:weak form} are linked by integration by parts whenever the two sides are meaningful. If \(D\subset\R^N\) is open, we set
+\[
+H^s_0(D)=\{u\in H^s(\R^N): u=0\text{ a.e. in }\R^N\setminus D\}.
+\]
+We also use the space
+\[
+L^1_s(\R^N)=
+\left\{
+u:\R^N\to\R:
+\int_{\R^N}\frac{|u(x)|}{1+|x|^{N+2s}}\dd x<\infty
+\right\}.
+\]
+Let \(\Gamma\subset\Omega\) be compact. We say that \(u\in W^{s,2}_{\loc}(\R^N\setminus\Gamma)\cap L^1_s(\R^N)\) is a weak solution of
+\[
+(-\Delta)^s u=g\quad\text{in }\Omega\setminus\Gamma
+\]
+if
+\begin{equation}\label{eq:weak definition}
+\mathcal E(u,\phi)=\int_\Omega g\phi\dd x
+\end{equation}
+for every \(\phi\in C_c^\infty(\Omega\setminus\Gamma)\). 
+
+For the restricted fractional Laplacian, the Dirichlet datum is understood in the exterior sense, that is
+\begin{equation}\label{eq: Dirichlet esterno}
+u=0\quad\text{in }\R^N\setminus\Omega.
+\end{equation}
+The exterior condition \eqref{eq: Dirichlet esterno} is essential in the moving-plane comparison, because it fixes the sign of the reflected difference outside the cap.
+
+We define also the corresponding distributional formulation. If
+\(u\in L^1_s(\mathbb R^N)\), then \((-\Delta)^s u\) is well defined as a
+distribution by
+\begin{equation}\label{eq:distributional fractional laplacian}
+\left\langle (-\Delta)^s u,\phi\right\rangle
+:=
+\int_{\mathbb R^N} u(x)(-\Delta)^s\phi(x)\,\dd x,
+\qquad
+\phi\in C_c^\infty(\Omega).
+\end{equation}
+Indeed, for every \(\phi\in C_c^\infty(\Omega)\), the function
+\((-\Delta)^s\phi\) has the decay
+\[
+|(-\Delta)^s\phi(x)|
+\le
+\frac{C_\phi}{1+|x|^{N+2s}},
+\]
+and therefore the integral in
+\eqref{eq:distributional fractional laplacian} is finite since
+\(u\in L^1_s(\mathbb R^N)\).
+Consequently we say that
+\[
+(-\Delta)^s u=g
+\quad\text{in }\mathcal D'(\Omega)
+\]
+if
+\begin{equation}\label{eq:distributional definition}
+\int_{\mathbb R^N} u(x)(-\Delta)^s\phi(x)\,\dd x
+=
+\int_\Omega g(x)\phi(x)\,\dd x
+\qquad
+\forall \phi\in C_c^\infty(\Omega).
+\end{equation}
+This formulation will be used in Lemma \ref{holder interno},
+where we only assume \(u\in L^1_s(\mathbb R^N)\). On the other hand, whenever
+the bilinear form \(\mathcal E(u,\phi)\) is well defined, the weak formulation
+and the distributional formulation agree. More precisely, if
+\(\phi\in C_c^\infty(\Omega\setminus\Gamma)\) and \(u\) has the local
+\(W^{s,2}\)-regularity needed to make \(\mathcal E(u,\phi)\) finite, then
+\[
+\mathcal E(u,\phi)
+=
+\int_{\mathbb R^N}u(x)(-\Delta)^s\phi(x)\,\dd x.
+\]
+Thus the weak identity
+\[
+\mathcal E(u,\phi)=\int_\Omega g\phi\,\dd x
+\]
+implies the distributional identity
+\[
+(-\Delta)^s u=g
+\]
+on every ball compactly contained in \(\Omega\setminus\Gamma\).
+
+\subsection{Fractional normal derivative}
+
+Let \(\Omega\subset\R^N\) be of class \(C^2\), and let \(\eta(x_0)\) be the
+outer unit normal at \(x_0\in\partial\Omega\). The fractional normal derivative
+is defined by
+\begin{equation}\label{eq:fractional normal derivative}
+(\partial_\eta)^s u(x_0)
+=
+-\lim_{t\to0^+}\frac{u(x_0-t\eta(x_0))}{t^s},
+\end{equation}
+whenever the limit exists.
+
+In order for \eqref{eq:fractional normal derivative} to be meaningful in
+our singular setting, we need to know that \(u/\delta^s\) is Holder
+continuous in a neighbourhood of the boundary. The standard tool is the
+boundary regularity theorem of Ros-Oton--Serra. However, that theorem
+applies to bounded solutions of the fractional Dirichlet problem with bounded
+right-hand side. In the present paper the solution have a non-removable
+singularity at the origin, and therefore it is not bounded in the whole domain.
+
+For this reason we first remove the interior pole by multiplying \(u\) by a
+cutoff function which vanishes near \(0\) and is identically one in a boundary
+neighbourhood. The truncated function is bounded and coincides with \(u\) near
+\(\partial\Omega\). Hence, if we can prove that this truncated function solves a
+fractional Dirichlet problem in \(\Omega\) with bounded right-hand side, then
+Ros-Oton--Serra applies to the truncated function and gives the desired
+regularity of \(u/\delta^s\) near the boundary.
+
+The localization is not standard as in the local case, since the fractional Laplacian is
+nonlocal. Multiplying by a cutoff produces commutator terms involving kernels
+of order \(|x-y|^{-N-2s}\). In the boundary neighbourhood these commutators are
+controlled since the support of the cutoff is far away from the pole. But in the intermediate
+region one needs local Holder regularity of \(u\) on compact sets
+away from the pole.
+
+\subsection{Capacity, moving planes and maximum principles}
+
+Since \(N>2s\), points have zero fractional \(s\)-capacity. Thus, for every \(a\in\R^N\), there exist cutoffs \(\psi_\varepsilon\in C_c^\infty(\R^N)\), \(0\le\psi_\varepsilon\le1\), such that
+\begin{equation}
+\psi_\varepsilon=0\text{ near }a,\qquad
+\psi_\varepsilon\to1\text{ a.e. in }\R^N,\qquad
+[\psi_\varepsilon]_{H^s(\R^N)}^2\to0.
+\end{equation}
+
+We now fix the notation for the moving plane procedure. The important point is that, for \(\lambda<0\), the original pole is outside the moving half-space, while the reflected pole \(0^\lambda\) lies inside it. For \(\lambda\in\R\), let
+\[
+T_\lambda:=\{x\in\R^N:x_1=\lambda\},
+\quad
+\Sigma_\lambda:=\{x\in\R^N:x_1<\lambda\},
+\quad
+\Omega_\lambda:=\Omega\cap\Sigma_\lambda,
+\quad \Omega'_{\lambda} := R_{\lambda}(\Omega_{\lambda}).
+\]
+The reflection of \(x=(x_1,x_2,\dots,x_N)\) with respect to \(T_\lambda\) is
+\[
+x^\lambda=(2\lambda-x_1,x_2,\dots,x_N).
+\]
+We set
+\[
+u_\lambda(x):=u(x^\lambda),
+\qquad
+w_\lambda:=u_\lambda-u.
+\]
+The singular point \(0\) is reflected into
+\[
+0^\lambda=(2\lambda,0,\dots,0).
+\]
+
+We shall use the weak and strong maximum principles for antisymmetric supersolutions, the fractional Hopf lemma and the fractional corner lemma of Fall--Jarohs. These results are used as black-box ingredients. In particular, the weak maximum principle applies in small domains \(D\), or whenever
+\[
+\|c^+\|_{L^\infty(D)}<\lambda_1(D),
+\]
+where
+\begin{equation}\label{eq:first eigenvalue}
+\lambda_1(D) :=
+\inf_{v\in H^s_0(D)\setminus\{0\}}
+\frac{\mathcal E(v,v)}{\int_D v^2\dd x}.
+\end{equation}
+We also use the estimate
+\begin{equation}
+\lambda_1(D)\ge C_{N,s}|D|^{-2s/N}.
+\end{equation}
+
+\subsection{Boggio's formula}
+
+Let \(B_R=B_R(0)\). The fractional torsion function of \(B_R\) is
+\[
+\tau_{R}(x)=\gamma_{N,s}(R^2-|x|^2)^s_+,
+\qquad
+\gamma_{N,s}
+=
+4^{-s}
+\frac{\Gamma(N/2)}{\Gamma(N/2+s)\Gamma(1+s)}.
+\]
+For \(N>2s\), the Green function of the restricted fractional Laplacian in \(B_R\) is given by the Boggio's formula, see for instance \cite{AbatangeloJarohsSaldana, Bucur}:
+\[
+G_{R}(x,y)=
+c_{N,s}|x-y|^{2s-N}
+\int_0^{\rho_R(x,y)}
+\frac{t^{s-1}}{(1+t)^{N/2}}\dd t,
+\]
+where
+\[
+\rho_R(x,y)=
+\frac{(R^2-|x|^2)(R^2-|y|^2)}
+{R^2|x-y|^2}.
+\]
+In particular,
+\[
+G_{R}(x,0)
+=
+c_{N,s}|x|^{2s-N}
+\int_0^{(R^2-|x|^2)/|x|^2}
+\frac{t^{s-1}}{(1+t)^{N/2}}\dd t.
+\]
+
+
+\section{Boundary regularity and comparison principles}
+\label{sec:boundary-quotient-singular}
+
+
+The aim of this section is to justify rigorously the boundary used in
+\eqref{eq:fractional normal derivative}. The difficulty is that the
+solution appearing in \eqref{eq:main problem} is unbounded at the interior
+pole, while the boundary regularity theorem of Ros-Oton--Serra applies to
+bounded solutions with bounded right-hand side. We therefore cut off the pole,
+prove that the truncated function solves a global Dirichlet problem with
+bounded right-hand side, and then transfer the regularity back to the
+original solution in the boundary neighbourhood where the cutoff is identically one.
+
+\begin{lemma}
+\label{holder interno}
+Let \(0<s<1\), \(N>2s\), and let
+\[
+B_{4R}(x_0)\Subset \Omega\setminus\{0\}.
+\]
+Assume that
+\[
+u\in L^1_s(\mathbb R^N)
+\]
+and that
+\[
+(-\Delta)^s u=g
+\qquad\text{in }B_{4R}(x_0)
+\]
+in the sense of distributions, with
+\[
+g\in L^\infty(B_{4R}(x_0)).
+\]
+Then, for every \(0<\beta<\min\{2s,1\}\),
+one has
+\[
+u\in C^\beta(B_R(x_0)).
+\]
+In particular, since
+\[
+2s-1<\min\{2s,1\},
+\]
+one can choose \(\beta>2s-1\).
+\end{lemma}
+
+\begin{proof}
+Let \(\eta\in C_c^\infty(B_{3R}(x_0))\) be such that
+\[
+0\le \eta\le 1,
+\qquad
+\eta\equiv1\quad\text{in }B_{2R}(x_0).
+\]
+Let us define
+\[
+G:=\eta g.
+\]
+Then
+\[
+G\in L^\infty(\mathbb R^N),
+\qquad
+\supp G\Subset B_{3R}(x_0).
+\]
+Let \(\Phi_s\) be the Riesz kernel of order \(2s\), namely
+\[
+\Phi_s(x)=a_{N,s}|x|^{2s-N},
+\qquad x\neq0,
+\]
+where \(a_{N,s}>0\) is choosen in such a way that 
+\[
+(-\Delta)^s\Phi_s=\delta_0
+\qquad\text{in }\mathcal D'(\mathbb R^N).
+\]
+Let us define
+\[
+P(x):=(\Phi_s*G)(x)
+=
+a_{N,s}\int_{\mathbb R^N}|x-y|^{2s-N}G(y)\,\dd y.
+\]
+The previous integral is finite for every \(x\in\mathbb R^N\). Indeed,
+since \(\supp G\subset B_M(0)\), then
+\[
+|P(x)|
+\le
+C\|G\|_{L^\infty}
+\int_{B_M(0)} |x-y|^{2s-N}\,\dd y.
+\]
+The only possible singularity is at \(y=x\). However,
+\[
+\int_{B_\varepsilon(x)} |x-y|^{2s-N}\,\dd y
+=
+C_N\int_0^\varepsilon r^{2s-N}r^{N-1}\,\dd r
+=
+C_N\int_0^\varepsilon r^{2s-1}\,\dd r
+<\infty
+\]
+since \(s>0\).
+Hence \(P\) is well-defined pointwise.
+
+
+
+By the standard equivalence between the Fourier definition 
+and the distributional definition of \((-\Delta)^{s}\), see
+\cite[Theorem 1.1]{Kwasnicki}, one has
+\[
+(-\Delta)^s P=G
+\qquad\text{in }\mathcal D'(\mathbb R^N).
+\]
+
+We now prove that
+\[
+P\in C^\beta(B_{2R}(x_0))
+\qquad
+\text{for every }0<\beta<\min\{2s,1\}.
+\]
+Let \(x,x'\in B_{2R}(x_0)\), and set
+\[
+d:=|x-x'|.
+\]
+It is sufficient to consider \(0<d<1\), since for \(d\ge1\) the desired estimate
+follows from the boundedness of \(P\) on \(B_{2R}(x_0)\).
+
+We write
+\[
+P(x)-P(x')
+=
+a_{N,s}\int_{\mathbb R^N}
+\Bigl(|x-y|^{2s-N}-|x'-y|^{2s-N}\Bigr)G(y)\,\dd y.
+\]
+Since \(G\) is supported in a bounded set, all the following integrals
+are taken over \(\supp G\). We split the integral according to whether \(y\) is close to one of the two
+points \(x,x'\), or away from both of them. Define
+\[
+E_1:=
+\bigl(B_{2d}(x)\cup B_{2d}(x')\bigr)\cap\supp G,
+\qquad
+E_2:=\supp G\setminus E_1.
+\]
+Thus \(E_1\) contains all points which are close to at least one of the two
+points \(x\) and \(x'\). In particular, all possible mixed cases are included
+in \(E_1\).
+
+On \(E_1\), we use the direct estimate:
+\begin{equation}\label{eq:E1 contribution}
+\begin{aligned}
+&\int_{E_1}
+\left|
+|x-y|^{2s-N}-|x'-y|^{2s-N}
+\right|
+|G(y)|\,\dd y\\
+&\quad\le
+\|G\|_{L^\infty}
+\left(
+\int_{B_{2d}(x)} |x-y|^{2s-N}\,\dd y
++
+\int_{B_{2d}(x')} |x'-y|^{2s-N}\,\dd y
+\right).
+\end{aligned}
+\end{equation}
+Passing to polar coordinates we get
+\[
+\int_{B_{2d}(x)} |x-y|^{2s-N}\,\dd y
+=
+C\int_0^{2d} r^{2s-N}r^{N-1}\,\dd r
+=
+C\int_0^{2d} r^{2s-1}\,\dd r
+=
+Cd^{2s}.
+\]
+The same estimate holds for the ball centered at \(x'\). Hence, from \eqref{eq:E1 contribution} we get
+\begin{equation}\label{eq:E1}
+\int_{E_1}
+\left|
+|x-y|^{2s-N}-|x'-y|^{2s-N}
+\right|
+|G(y)|\,\dd y
+\le
+C\|G\|_{L^\infty}d^{2s}.
+\end{equation}
+We now estimate the contribution of \(E_2\). If \(y\in E_2\), then by definition
+\[
+|x-y|>2d,
+\qquad
+|x'-y|>2d.
+\]
+Let us set
+\begin{equation}\label{eq:F}
+F(z):=|z-y|^{2s-N},
+\end{equation}
+and let
+\[
+x_t:=x'+t(x-x'),
+\qquad t\in[0,1].
+\]
+Then, by the mean value theorem in integral form,
+\begin{equation}\label{eq:mvt}
+F(x)-F(x')
+=
+\int_0^1 \nabla F(x_t)\cdot(x-x')\,\dd t.
+\end{equation}
+Since
+\[
+\nabla F(z)
+=
+(2s-N)|z-y|^{2s-N-2}(z-y),
+\]
+we have
+\[
+|\nabla F(z)|
+\le
+C|z-y|^{2s-N-1}.
+\]
+Therefore
+\begin{equation}\label{eq:bound d}
+|F(x)-F(x')|
+\le
+Cd\int_0^1 |x_t-y|^{2s-N-1}\,\dd t.
+\end{equation}
+Moreover,
+\[
+|x_t-x|\le d,
+\]
+and hence
+\[
+|x_t-y|
+\ge
+|x-y|-|x_t-x|
+\ge
+|x-y|-d
+\ge
+\frac12|x-y|,
+\]
+since \(|x-y|>2d\). Since \(2s-N-1<0\), this implies
+\[
+|x_t-y|^{2s-N-1}
+\le
+C|x-y|^{2s-N-1}.
+\]
+Consequently, by using \eqref{eq:F}, \eqref{eq:mvt} and \eqref{eq:bound d} we get
+\[
+\left|
+|x-y|^{2s-N}-|x'-y|^{2s-N}
+\right|
+\le
+Cd\,|x-y|^{2s-N-1}.
+\]
+It follows that
+\begin{equation}\label{eq:bla}
+\begin{aligned}
+&\int_{E_2}
+\left|
+|x-y|^{2s-N}-|x'-y|^{2s-N}
+\right|
+|G(y)|\,\dd y
+\le
+C\|G\|_{L^\infty}d
+\int_{E_2}|x-y|^{2s-N-1}\,\dd y\\
+&\le
+C\|G\|_{L^\infty}d
+\int_{2d}^{C_R} r^{2s-N-1}r^{N-1}\,\dd r =
+C\|G\|_{L^\infty}d
+\int_{2d}^{C_R} r^{2s-2}\,\dd r,
+\end{aligned}
+\end{equation}
+where \(C_R>0\) depends only on \(R\) and on the support of \(G\).
+
+We now distinguish three cases.
+If \(2s<1\), then
+\begin{equation}\label{eq:blabla}
+d\int_{2d}^{C_R} r^{2s-2}\,\dd r
+\le
+C d\,d^{2s-1}
+=
+Cd^{2s}.
+\end{equation}
+If \(2s=1\), then
+\begin{equation}\label{eq:blablabla}
+d\int_{2d}^{C_R} r^{-1}\,\dd r
+=
+d\log\left(\frac{C_R}{2d}\right)
+\le
+C d(1+|\log d|).
+\end{equation}
+For every \(\beta<1\), one has
+\[
+d(1+|\log d|)\le C_\beta d^\beta
+\qquad\text{for }0<d<1.
+\]
+Indeed, setting \(a:=1-\beta>0\), the function \(d^a|\log d|\) is bounded on \((0,1)\).
+If \(2s>1\), then
+\begin{equation}\label{eq:blablablabla}
+d\int_{2d}^{C_R} r^{2s-2}\,\dd r
+\le
+Cd.
+\end{equation}
+For every \(\beta<1\), since \(0<d<1\), one has
+\begin{equation}\label{eq:blablablablabla}
+d\le d^\beta.
+\end{equation}
+Therefore by combining \eqref{eq:E1}, \eqref{eq:bla},\eqref{eq:blabla},\eqref{eq:blablabla},\eqref{eq:blablablabla} and \eqref{eq:blablablablabla} we get
+\[
+|P(x)-P(x')|
+\le
+C d^\beta
+\]
+for every
+\[
+0<\beta<\min\{2s,1\}.
+\]
+Therefore
+\[
+P\in C^\beta(B_{2R}(x_0))
+\qquad
+\text{for every }0<\beta<\min\{2s,1\}.
+\]
+Now we define
+\[
+H:=u-P.
+\]
+Since
+\[
+(-\Delta)^s u=g
+\quad\text{in }B_{4R}(x_0)
+\]
+and
+\[
+(-\Delta)^s P=G=\eta g=g
+\quad\text{in }B_{2R}(x_0),
+\]
+we get
+\[
+(-\Delta)^s H=0
+\qquad\text{in }B_{2R}(x_0)
+\]
+in the sense of distributions.
+
+Moreover,
+\[
+H\in L^1_s(\mathbb R^N).
+\]
+Indeed, \(u\in L^1_s(\mathbb R^N)\) by assumption. Also
+\(P\in L^1_s(\mathbb R^N)\): for large \(|x|\), since \(G\) has compact
+support,
+\[
+|P(x)|
+\le
+C\int_{\supp G} |x-y|^{2s-N}|G(y)|\,\dd y
+\le
+C |x|^{2s-N},
+\]
+and therefore
+\[
+\int_{\mathbb R^N}
+\frac{|P(x)|}{1+|x|^{N+2s}}\,\dd x
+<\infty.
+\]
+Thus \(H=u-P\in L^1_s(\mathbb R^N)\).
+
+We now use the interior regularity of distributional \(s\)-harmonic functions.
+Since
+\[
+H\in L^1_s(\mathbb R^N)
+\]
+and
+\[
+(-\Delta)^s H=0
+\qquad\text{in }B_{2R}(x_0)
+\]
+in the distributional sense, after translating and rescaling \(B_{2R}(x_0)\)
+onto the unit ball, \(H\) is a very weak \(s\)-harmonic function in the sense of
+Carbotti--Cito--La Manna--Pallara. Hence, by
+\cite[Main Theorem item (2)]{CarbottiCitoLaMannaPallara},
+\(H\) is real analytic in \(B_{2R}(x_0)\). Hence
+\[
+H\in C^\infty(B_R(x_0)).
+\]
+In particular,
+\[
+H\in C^\beta(B_R(x_0))
+\qquad
+\text{for every }0<\beta<1.
+\]
+Finally,
+\[
+u=P+H.
+\]
+Since
+\[
+P\in C^\beta(B_R(x_0))
+\qquad
+\text{for every }0<\beta<\min\{2s,1\},
+\]
+and
+\[
+H\in C^\beta(B_R(x_0))
+\qquad
+\text{for every }0<\beta<1,
+\]
+we obtain
+\[
+u\in C^\beta(B_R(x_0))
+\qquad
+\text{for every }0<\beta<\min\{2s,1\}.
+\]
+Since \(s\in(0,1)\), we have
+\[
+2s-1<\min\{2s,1\}.
+\]
+Therefore we can choose
+\[
+\beta\in(2s-1,\min\{2s,1\}).
+\]
+\end{proof}
+
+We can now prove the boundary regularity result. The point of the next proposition
+is to replace the possibly unbounded singular solution by a bounded truncated
+one which agrees with it in a boundary neighbourhood. The previous lemma is used only
+in the compact intermediate region, where the commutator generated by the
+cutoff must be controlled.
+
+\begin{proposition}
+\label{boundary regularity}
+Let \(\Omega\subset\mathbb R^N\) be a bounded domain of class \(C^{2}\), assume that
+\(0\in\Omega\), and set
+\[
+d_0:=\operatorname{dist}(0,\partial\Omega)>0.
+\]
+Let \(F\) satisfy
+\begin{equation}\label{eq: boundary regularity}
+F\in L^\infty_{\loc}(\overline\Omega\setminus\{0\})
+\end{equation}
+in the sense that for every compact set
+\(K\subset\overline\Omega\setminus\{0\}\), one has
+\[
+F\in L^\infty(K\cap\Omega).
+\]
+Assume that
+\begin{equation}\label{eq:u regularity}
+u\in L^1_s(\mathbb R^N)
+\cap W^{s,2}_{\mathrm{loc}}(\Omega\setminus\{0\})
+\cap C(\mathbb R^N\setminus\{0\})
+\end{equation}
+satisfies
+\begin{equation}\label{eq:equazione u}
+(-\Delta)^s u=F
+\quad\text{in }\Omega\setminus\{0\}
+\end{equation}
+in the weak sense, and
+\begin{equation}\label{eq: exterior Dirichlet}
+u=0
+\quad\text{in }\mathbb R^N\setminus\Omega.
+\end{equation}
+Then there exist \(\rho>0\), \(\alpha\in(0,1)\) and a function
+\[
+\psi\in C^\alpha(\overline{U_\rho}),
+\qquad
+U_\rho:=\{x\in\Omega:\delta(x)<\rho\},
+\]
+such that
+\[
+u(x)=\delta(x)^s\psi(x)
+\qquad\forall x \in U_\rho,
+\]
+where
+\[
+\delta(x):=\operatorname{dist}(x,\mathbb R^N\setminus\Omega).
+\]
+In particular, \(u/\delta^s\) is Holder continuous in a neighbourhood of
+\(\partial\Omega\).
+\end{proposition}
+
+\begin{proof}
+We remove the singularity by means of a cutoff. Fix
+\(r>0\) such that
+\[
+0<4r<d_0.
+\]
+Let \(\chi\in C^\infty(\mathbb R^N)\) be such that
+\begin{equation}\label{eq: cutoff}
+0\le \chi\le1,
+\qquad
+\chi\equiv0 \quad\text{in }B_r(0),
+\qquad
+\chi\equiv1 \quad\text{in }\mathbb R^N\setminus B_{2r}(0).
+\end{equation}
+Set
+\begin{equation}\label{eq:soluzione troncata}
+w:=\chi u.
+\end{equation}
+By \eqref{eq: exterior Dirichlet} and \eqref{eq:soluzione troncata}, we also have
+\[
+w=0
+\qquad\text{in }\mathbb R^N\setminus\Omega.
+\]
+Choose \(\rho>0\) sufficiently small such that
+\begin{equation}\label{eq:rho}
+\overline{U_\rho}\cap \overline{B_{2r}(0)}=\emptyset,
+\qquad
+U_\rho:=\{x\in\Omega:\delta(x)<\rho\}.
+\end{equation}
+This is possible because \(2r<d_0=\operatorname{dist}(0,\partial\Omega)\).
+Then, by \eqref{eq: cutoff} and \eqref{eq:rho},
+\begin{equation}\label{eq:w = u}
+\chi\equiv1\quad\text{and}\quad w=u\qquad\text{in }U_\rho.
+\end{equation}
+We cover \(\Omega\) by using three open sets
+\[
+D_0:=B_{3r/4}(0),
+\]
+\[
+D_{\mathrm{mid}}
+:=
+\{x\in\Omega:\ |x|>r/2,\ \delta(x)>\rho/2\},
+\]
+and
+\[
+U_\rho=\{x\in\Omega:\delta(x)<\rho\}.
+\]
+We have that it holds
+\begin{equation}\label{eq:covering}
+\Omega=D_0\cup D_{\mathrm{mid}}\cup U_\rho.
+\end{equation}
+Indeed, if \(x\notin D_0\), then
+\[
+|x|\ge 3r/4>r/2,
+\]
+and if \(x\notin U_\rho\), then
+\[
+\delta(x)\ge \rho>\rho/2.
+\]
+Hence \(x\in D_{\mathrm{mid}}\).
+Let
+\[
+\zeta_0,\ \zeta_{\mathrm{mid}},\ \zeta_\rho\in C^\infty(\Omega)
+\]
+be a smooth partition of unity related to \eqref{eq:covering}. Then
+\begin{equation}
+0\le \zeta_i\le1,
+\qquad
+\zeta_0+\zeta_{\mathrm{mid}}+\zeta_\rho=1
+\quad\text{in }\Omega,
+\end{equation}
+and
+\begin{equation}\label{eq:partition supports}
+\operatorname{supp}\zeta_0\subset D_0,
+\qquad
+\operatorname{supp}\zeta_{\mathrm{mid}}\subset D_{\mathrm{mid}},
+\qquad
+\operatorname{supp}\zeta_\rho\subset U_\rho.
+\end{equation}
+The local computations below are performed with arbitrary test functions
+supported in each of the three regions. At the end, an arbitrary global test
+function will be split by means of this partition of unity. This point is
+important because the fractional Laplacian is nonlocal and so each local computation
+below is written for the full whole-space bilinear form \(\mathcal E\), so the
+tail interactions will not be lost.
+
+\medskip
+\noindent\textbf{Step 1: the boundary neighbourhood.}
+We first identify the equation satisfied by \(w\) in \(U_\rho\). Let
+\[
+\phi\in C_c^\infty(U_\rho).
+\]
+By \eqref{eq:w = u}, \(\chi\phi=\phi\). Moreover \(\phi\) is supported away from \(0\), hence it is an admissible test function for the weak equation \eqref{eq:equazione u}.
+Hence
+\begin{equation}\label{eq:buh}
+\mathcal E(u,\chi\phi)
+=
+\mathcal E(u,\phi)
+=
+\int_\Omega F\phi\,\dd x.
+\end{equation}
+The test function \(\phi\) is admissible because
+\[
+\supp\phi\Subset U_\rho\subset\Omega\setminus\{0\}.
+\]
+Moreover, by \eqref{eq:rho}, the set \(\overline{U_\rho}\) is a
+compact subset of \(\overline\Omega\setminus\{0\}\). Therefore, by
+\eqref{eq: boundary regularity}, applied with \(K=\overline{U_\rho}\), we have
+\begin{equation}\label{eq:F limitata}
+F\in L^\infty(U_\rho).
+\end{equation}
+Hence the r.h.s. of \eqref{eq:buh} is finite.
+
+On the other hand, using \(w=\chi u\), we compare
+\(\mathcal E(w,\phi)\) with \(\mathcal E(u,\chi\phi)\). We first perform the
+computation on a compact set away from the pole, and only afterwards pass to
+the whole-space form.
+
+Let
+\[
+S:=\supp\phi\Subset U_\rho,
+\qquad
+A:=\supp\nabla\chi\subset B_{2r}(0)\setminus B_r(0).
+\]
+Since \(S\subset U_\rho\) and \(\overline{U_\rho}\cap \overline{B_{2r}(0)}=\emptyset\), the sets
+\(S\) and \(A\) are disjoint and both are compactly contained in
+\(\Omega\setminus\{0\}\). Choose a compact set
+\[
+K\Subset\Omega\setminus\{0\}
+\]
+such that
+\[
+S\cup A\Subset K.
+\]
+On \(K\) we have \(u\in W^{s,2}(K)\). Hence, using \(w=\chi u\), the following bilinear expressions are well defined:
+\[
+\mathcal E_K(w,\phi)
+=
+\frac{c_{N,s}}2
+\iint_{K\times K}
+\frac{
+(\chi(x)u(x)-\chi(y)u(y))(\phi(x)-\phi(y))
+}
+{|x-y|^{N+2s}}\,\dd x\,\dd y,
+\]
+and
+\[
+\mathcal E_K(u,\chi\phi)
+=
+\frac{c_{N,s}}2
+\iint_{K\times K}
+\frac{
+(u(x)-u(y))(\chi(x)\phi(x)-\chi(y)\phi(y))
+}
+{|x-y|^{N+2s}}\,\dd x\,\dd y.
+\]
+Subtracting the two identities, the numerator of
+\[
+\mathcal E_K(w,\phi)-\mathcal E_K(u,\chi\phi)
+\]
+is
+\[
+\begin{aligned}
+&(\chi(x)u(x)-\chi(y)u(y))(\phi(x)-\phi(y))\\
+&\quad
+-(u(x)-u(y))(\chi(x)\phi(x)-\chi(y)\phi(y))\\
+&=
+(\chi(x)-\chi(y))
+\bigl(u(y)\phi(x)-u(x)\phi(y)\bigr).
+\end{aligned}
+\]
+Therefore
+\[
+\mathcal E_K(w,\phi)
+=
+\mathcal E_K(u,\chi\phi)+\mathcal R_{\chi,K}(u,\phi),
+\]
+where
+\[
+\mathcal R_{\chi,K}(u,\phi)
+=
+\frac{c_{N,s}}2
+\iint_{K\times K}
+\frac{
+(\chi(x)-\chi(y))
+\bigl(u(y)\phi(x)-u(x)\phi(y)\bigr)
+}
+{|x-y|^{N+2s}}
+\,\dd x\,\dd y.
+\]
+Since \(\phi\in C_c^\infty(U_\rho)\) and \(\chi\equiv1\) in \(U_\rho\), we
+have \(\chi=1\) on \(S=\supp\phi\). Splitting
+\[
+\mathcal R_{\chi,K}(u,\phi)=I_{1,K}+I_{2,K},
+\]
+with
+\[
+I_{1,K}
+=
+\frac{c_{N,s}}2
+\iint_{K\times K}
+\frac{(\chi(x)-\chi(y))u(y)\phi(x)}
+{|x-y|^{N+2s}}\,\dd x\,\dd y
+\]
+and
+\[
+I_{2,K}
+=
+-\frac{c_{N,s}}2
+\iint_{K\times K}
+\frac{(\chi(x)-\chi(y))u(x)\phi(y)}
+{|x-y|^{N+2s}}\,\dd x\,\dd y,
+\]
+we obtain
+\[
+I_{1,K}
+=
+\frac{c_{N,s}}2
+\int_{S}
+\phi(x)
+\left[
+\int_K
+\frac{(1-\chi(y))u(y)}
+{|x-y|^{N+2s}}\,\dd y
+\right]\dd x.
+\]
+Similarly, since \(\phi(y)\neq0\) implies \(y\in S\) and hence
+\(\chi(y)=1\), after exchanging the names of the variables we get
+\[
+I_{2,K}
+=
+\frac{c_{N,s}}2
+\int_{S}
+\phi(x)
+\left[
+\int_K
+\frac{(1-\chi(y))u(y)}
+{|x-y|^{N+2s}}\,\dd y
+\right]\dd x.
+\]
+Thus
+\[
+\mathcal R_{\chi,K}(u,\phi)
+=
+c_{N,s}
+\int_{S}
+\phi(x)
+\left[
+\int_K
+\frac{(1-\chi(y))u(y)}
+{|x-y|^{N+2s}}\,\dd y
+\right]\dd x.
+\]
+We now pass from the compact computation to the whole-space one. Since
+\(\phi\) is supported in \(S\subset K\), the whole-space form differs from the one over \(K\) only for the interactions between \(S\) and
+\(\mathbb R^N\setminus K\). Using the symmetry of the kernel,
+\[
+\mathcal E(w,\phi)-\mathcal E_K(w,\phi)
+=
+c_{N,s}
+\int_S \phi(x)
+\left[
+\int_{\mathbb R^N\setminus K}
+\frac{w(x)-w(y)}{|x-y|^{N+2s}}\,\dd y
+\right]\dd x,
+\]
+and similarly
+\[
+\mathcal E(u,\chi\phi)-\mathcal E_K(u,\chi\phi)
+=
+c_{N,s}
+\int_S \chi(x)\phi(x)
+\left[
+\int_{\mathbb R^N\setminus K}
+\frac{u(x)-u(y)}{|x-y|^{N+2s}}\,\dd y
+\right]\dd x.
+\]
+Using \(\chi(x)=1\) and \(w(x)=u(x)\) for \(x\in S\), their difference is
+\[
+\begin{aligned}
+&\bigl(\mathcal E(w,\phi)-\mathcal E_K(w,\phi)\bigr)
+-
+\bigl(\mathcal E(u,\chi\phi)-\mathcal E_K(u,\chi\phi)\bigr)\\
+&\quad=
+c_{N,s}
+\int_S \phi(x)
+\left[
+\int_{\mathbb R^N\setminus K}
+\frac{(w(x)-w(y))-(u(x)-u(y))}{|x-y|^{N+2s}}\,\dd y
+\right]\dd x\\
+&\quad=
+c_{N,s}
+\int_S \phi(x)
+\left[
+\int_{\mathbb R^N\setminus K}
+\frac{(1-\chi(y))u(y)}{|x-y|^{N+2s}}\,\dd y
+\right]\dd x.
+\end{aligned}
+\]
+Adding this tail contribution to the local commutator gives
+\[
+\mathcal E(w,\phi)-\mathcal E(u,\chi\phi)
+=
+c_{N,s}
+\int_S
+\phi(x)
+\left[
+\int_{\mathbb R^N}
+\frac{(1-\chi(y))u(y)}
+{|x-y|^{N+2s}}\,\dd y
+\right]\dd x.
+\]
+Therefore
+\[
+\mathcal E(w,\phi)
+=
+\mathcal E(u,\chi\phi)
++
+\int_{U_\rho} h(x)\phi(x)\,\dd x,
+\]
+where
+\[
+h(x)
+=
+c_{N,s}
+\int_{\mathbb R^N}
+\frac{(1-\chi(y))u(y)}
+{|x-y|^{N+2s}}\,\dd y.
+\]
+The function \(h\) is bounded in \(U_\rho\). Indeed, the support of
+\(1-\chi\) is contained in \(B_{2r}(0)\), while \(U_\rho\) is at positive
+distance from \(B_{2r}(0)\). Hence there exists \(d_1>0\) such that
+\[
+|x-y|\ge d_1
+\qquad
+\forall x \in U_\rho,\ y\in\supp(1-\chi).
+\]
+Therefore
+\[
+|h(x)|
+\le
+C\int_{B_{2r}(0)} |u(y)|\,\dd y
+\qquad\forall x \in U_\rho.
+\]
+The last integral is finite since \(u\in L^1_s(\mathbb R^N)\). Thus
+\[
+h\in L^\infty(U_\rho).
+\]
+Together with \eqref{eq:F limitata} we get
+\[
+F+h\in L^\infty(U_\rho).
+\]
+Combining the previous identities, we obtain
+\[
+\mathcal E(w,\phi)
+=
+\int_{U_\rho} (F+h)\phi\,\dd x
+\qquad
+\forall \phi\in C_c^\infty(U_\rho).
+\]
+Equivalently,
+\[
+(-\Delta)^s w=F+h
+\quad\text{in }U_\rho
+\]
+in the weak sense, with
+\[
+F+h\in L^\infty(U_\rho).
+\]
+
+\medskip
+\noindent\textbf{Step 2: the intermediate region.}
+We now prove that the right-hand side of the equation satisfied by \(w\) is
+bounded in the region which stays away both from the pole and from the
+boundary, namely in
+\[
+D_{\mathrm{mid}}
+=
+\{x\in\Omega:\ |x|>r/2,\ \delta(x)>\rho/2\}.
+\]
+Since
+\[
+\overline{D_{\mathrm{mid}}}\Subset\Omega\setminus\{0\},
+\]
+we will use interior regularity away from the pole proved in  Lemma \ref{holder interno}.
+
+Choose an open set \(D'\) such that
+\[
+\overline{D_{\mathrm{mid}}}\cup\supp\nabla\chi
+\Subset D'\Subset\Omega\setminus\{0\}.
+\]
+On every ball compactly contained in \(\Omega\setminus\{0\}\), the weak formulation \eqref{eq:equazione u} implies the distributional identity
+\[
+(-\Delta)^s u=F.
+\]
+Moreover, on such balls \(F\) is bounded by \eqref{eq: boundary regularity}. Therefore
+Lemma~\ref{holder interno}, applied on finitely many balls
+covering \(\overline{D'}\), gives some
+\[
+\beta>2s-1
+\]
+such that
+\[
+u\in C^\beta(\overline{D'}).
+\]
+Let us take
+\[
+\phi\in C_c^\infty(D_{\mathrm{mid}})
+\]
+and set
+\[
+S_{\mathrm{mid}}:=\supp\phi.
+\]
+We choose a compact set
+\[
+K_{\mathrm{mid}}\Subset D'
+\]
+such that
+\[
+S_{\mathrm{mid}}\cup\supp\nabla\chi\Subset K_{\mathrm{mid}}.
+\]
+On \(K_{\mathrm{mid}}\) we have \(u\in W^{s,2}(K_{\mathrm{mid}})\). Let us define
+\[
+\mathcal E_{K_{\mathrm{mid}}}(\xi,\eta)
+:=
+\frac{c_{N,s}}2
+\iint_{K_{\mathrm{mid}}\times K_{\mathrm{mid}}}
+\frac{(\xi(x)-\xi(y))(\eta(x)-\eta(y))}
+{|x-y|^{N+2s}}\,\dd x\,\dd y.
+\]
+As before, using \(w=\chi u\), the same computation of the step 1 gives
+\[
+\mathcal E_{K_{\mathrm{mid}}}(w,\phi)
+=
+\mathcal E_{K_{\mathrm{mid}}}(u,\chi\phi)
++
+\mathcal R_{\chi,K_{\mathrm{mid}}}(u,\phi),
+\]
+where
+\[
+\mathcal R_{\chi,K_{\mathrm{mid}}}(u,\phi)
+=
+\frac{c_{N,s}}2
+\iint_{K_{\mathrm{mid}}\times K_{\mathrm{mid}}}
+\frac{
+(\chi(x)-\chi(y))
+\bigl(u(y)\phi(x)-u(x)\phi(y)\bigr)}
+{|x-y|^{N+2s}}
+\,\dd x\,\dd y.
+\]
+Passing from \(K_{\mathrm{mid}}\times K_{\mathrm{mid}}\) to the whole-space
+adds exactly the interactions between \(S_{\mathrm{mid}}\) and
+\(\mathbb R^N\setminus K_{\mathrm{mid}}\). Thus
+\[
+\begin{aligned}
+\mathcal E(w,\phi)
+&=
+\mathcal E(u,\chi\phi)
++
+\mathcal R_{\chi,K_{\mathrm{mid}}}(u,\phi)\\
+&\quad+
+c_{N,s}
+\int_{S_{\mathrm{mid}}}\phi(x)
+\int_{\mathbb R^N\setminus K_{\mathrm{mid}}}
+\frac{(\chi(x)-\chi(y))u(y)}
+{|x-y|^{N+2s}}
+\,\dd y\,\dd x.
+\end{aligned}
+\]
+
+The last two terms give the whole-space commutator. Indeed for \(\varepsilon>0\), let us set
+\[
+\mathcal R_{\chi,K_{\mathrm{mid}}}^{\varepsilon}(u,\phi)
+:=
+\frac{c_{N,s}}2
+\iint_{\substack{K_{\mathrm{mid}}\times K_{\mathrm{mid}}\\ |x-y|>\varepsilon}}
+\frac{
+(\chi(x)-\chi(y))
+\bigl(u(y)\phi(x)-u(x)\phi(y)\bigr)}
+{|x-y|^{N+2s}}
+\,\dd x\,\dd y.
+\]
+By the symmetry of \(K_{\mathrm{mid}}\times K_{\mathrm{mid}}\) and of the
+kernel, and by exchanging the variables in the second term, we obtain
+\[
+\mathcal R_{\chi,K_{\mathrm{mid}}}^{\varepsilon}(u,\phi)
+=
+c_{N,s}
+\int_{S_{\mathrm{mid}}}\phi(x)
+\int_{K_{\mathrm{mid}}\setminus B_\varepsilon(x)}
+\frac{(\chi(x)-\chi(y))u(y)}
+{|x-y|^{N+2s}}
+\,\dd y\,\dd x .
+\]
+Since \(S_{\mathrm{mid}}\Subset K_{\mathrm{mid}}\), for \(\varepsilon>0\)
+small enough one has \(B_\varepsilon(x)\subset K_{\mathrm{mid}}\) for every
+\(x\in S_{\mathrm{mid}}\). Adding the tail contribution coming from
+\(\mathbb R^N\setminus K_{\mathrm{mid}}\), we get
+\[
+\begin{aligned}
+&\mathcal R_{\chi,K_{\mathrm{mid}}}^{\varepsilon}(u,\phi)
++
+c_{N,s}
+\int_{S_{\mathrm{mid}}}\phi(x)
+\int_{\mathbb R^N\setminus K_{\mathrm{mid}}}
+\frac{(\chi(x)-\chi(y))u(y)}
+{|x-y|^{N+2s}}
+\,\dd y\,\dd x\\
+&\qquad =
+c_{N,s}
+\int_{S_{\mathrm{mid}}}\phi(x)
+\int_{\mathbb R^N\setminus B_\varepsilon(x)}
+\frac{(\chi(x)-\chi(y))u(y)}
+{|x-y|^{N+2s}}
+\,\dd y\,\dd x.
+\end{aligned}
+\]
+Letting \(\varepsilon\to0^+\), this gives
+\[
+c_{N,s}
+\int_{S_{\mathrm{mid}}}\phi(x)\,
+\PV\int_{\mathbb R^N}
+\frac{(\chi(x)-\chi(y))u(y)}
+{|x-y|^{N+2s}}
+\,\dd y\,\dd x.
+\]
+For \(x\in S_{\mathrm{mid}}\), we rewrite
+\[
+u(y)=u(x)-(u(x)-u(y)).
+\]
+Therefore
+\[
+\begin{aligned}
+&c_{N,s}\PV\int_{\mathbb R^N}
+\frac{(\chi(x)-\chi(y))u(y)}
+{|x-y|^{N+2s}}
+\,\dd y\\
+&\quad =
+c_{N,s}u(x)\PV\int_{\mathbb R^N}
+\frac{\chi(x)-\chi(y)}
+{|x-y|^{N+2s}}
+\,\dd y\\
+&\qquad -
+c_{N,s}\PV\int_{\mathbb R^N}
+\frac{(\chi(x)-\chi(y))(u(x)-u(y))}
+{|x-y|^{N+2s}}
+\,\dd y\\
+&\quad =
+u(x)(-\Delta)^s\chi(x)-\mathcal C_\chi[u](x),
+\end{aligned}
+\]
+where
+\[
+\mathcal C_\chi[u](x)
+:=
+c_{N,s}\PV\int_{\mathbb R^N}
+\frac{(\chi(x)-\chi(y))(u(x)-u(y))}
+{|x-y|^{N+2s}}
+\,\dd y.
+\]
+Hence
+\[
+\mathcal E(w,\phi)
+=
+\mathcal E(u,\chi\phi)
++
+\int_{D_{\mathrm{mid}}}
+\bigl(u(-\Delta)^s\chi-\mathcal C_\chi[u]\bigr)\phi\,\dd x.
+\]
+Since
+\[
+\chi\phi\in C_c^\infty(\Omega\setminus\{0\}),
+\]
+it is an admissible test function in the equation satisfied by \(u\). Hence
+\[
+\mathcal E(u,\chi\phi)
+=
+\int_\Omega F\chi\phi\,\dd x.
+\]
+Therefore
+\[
+\mathcal E(w,\phi)
+=
+\int_{D_{\mathrm{mid}}}
+\bigl(\chi F+u(-\Delta)^s\chi-\mathcal C_\chi[u]\bigr)\phi\,\dd x.
+\]
+Thus
+\[
+(-\Delta)^s w
+=
+\chi F+u(-\Delta)^s\chi-\mathcal C_\chi[u]
+\qquad\text{in }D_{\mathrm{mid}}
+\]
+in the weak sense.
+
+It remains to prove that this right-hand side is bounded. First,
+\[
+u\in C^\beta(\overline{D'})
+\]
+implies
+\[
+u\in L^\infty(D_{\mathrm{mid}}).
+\]
+Moreover, since
+\[
+\overline{D_{\mathrm{mid}}}\Subset\Omega\setminus\{0\},
+\]
+\eqref{eq: boundary regularity} implies
+\[
+F\in L^\infty(D_{\mathrm{mid}}).
+\]
+Hence
+\[
+\chi F\in L^\infty(D_{\mathrm{mid}}).
+\]
+Moreover, since \(\chi\in C^\infty(\mathbb R^N)\) and \(\chi\) is constant in
+\(B_r(0)\) and outside \(B_{2r}(0)\), one has
+\[
+(-\Delta)^s\chi\in L^\infty(\mathbb R^N).
+\]
+Hence
+\[
+u(-\Delta)^s\chi\in L^\infty(D_{\mathrm{mid}}).
+\]
+We now estimate \(C_\chi[u]\). Let \(d_*>0\) be such that
+\[
+B_{d_*}(x)\subset D'
+\qquad
+\forall x \in D_{\mathrm{mid}}.
+\]
+We split
+\[
+\mathcal C_\chi[u](x)
+=
+\mathcal C_{\chi,\mathrm{loc}}[u](x)
++
+\mathcal C_{\chi,\mathrm{tail}}[u](x),
+\]
+where
+\[
+\mathcal C_{\chi,\mathrm{loc}}[u](x)
+:=
+c_{N,s}\PV\int_{B_{d_*}(x)}
+\frac{(\chi(x)-\chi(y))(u(x)-u(y))}
+{|x-y|^{N+2s}}
+\,\dd y
+\]
+and
+\[
+\mathcal C_{\chi,\mathrm{tail}}[u](x)
+:=
+c_{N,s}\int_{\mathbb R^N\setminus B_{d_*}(x)}
+\frac{(\chi(x)-\chi(y))(u(x)-u(y))}
+{|x-y|^{N+2s}}
+\,\dd y.
+\]
+For the local part, using the smoothness of \(\chi\) and the
+\(C^\beta\)-regularity of \(u\) in \(D'\),
+\[
+|\chi(x)-\chi(y)|\le C|x-y|,
+\qquad
+|u(x)-u(y)|\le C|x-y|^\beta.
+\]
+Therefore
+\[
+\begin{aligned}
+|\mathcal C_{\chi,\mathrm{loc}}[u](x)|
+&\le
+C\int_{B_{d_*}(x)}
+\frac{|x-y|^{1+\beta}}
+{|x-y|^{N+2s}}
+\,\dd y\\
+&=
+C\int_0^{d_*} r^{\beta-2s}\,\dd r
+<\infty,
+\end{aligned}
+\]
+since \(\beta>2s-1\). This estimate is uniform in \(x\in D_{\mathrm{mid}}\).
+
+For the tail part, \(|x-y|\ge d_*\). Since \(\chi\) is bounded, \(u\) is
+bounded on \(D_{\mathrm{mid}}\), \(u=0\) in \(\mathbb R^N\setminus\Omega\),
+and \(u\in L^1_s(\mathbb R^N)\), we obtain
+\[
+\begin{aligned}
+|\mathcal C_{\chi,\mathrm{tail}}[u](x)|
+&\le
+C\|u\|_{L^\infty(D_{\mathrm{mid}})}
+\int_{\mathbb R^N\setminus B_{d_*}(x)}
+\frac{\dd y}{|x-y|^{N+2s}}\\
+&\quad+
+C\int_{\mathbb R^N\setminus B_{d_*}(x)}
+\frac{|u(y)|}{|x-y|^{N+2s}}\,\dd y.
+\end{aligned}
+\]
+The first integral is uniformly bounded in \(x\). For the second one, since
+\(D_{\mathrm{mid}}\) is bounded, there exists \(C>0\) such that
+\[
+\frac1{|x-y|^{N+2s}}
+\le
+\frac{C}{1+|y|^{N+2s}}
+\]
+for every \(x\in D_{\mathrm{mid}}\) and
+\(y\in\mathbb R^N\setminus B_{d_*}(x)\). Hence
+\[
+\int_{\mathbb R^N\setminus B_{d_*}(x)}
+\frac{|u(y)|}{|x-y|^{N+2s}}\,\dd y
+\le
+C
+\int_{\mathbb R^N}
+\frac{|u(y)|}{1+|y|^{N+2s}}\,\dd y
+<\infty.
+\]
+Thus
+\[
+\mathcal C_\chi[u]\in L^\infty(D_{\mathrm{mid}}).
+\]
+Consequently,
+\[
+G_{\mathrm{mid}}
+:=
+\chi F+u(-\Delta)^s\chi-\mathcal C_\chi[u]
+\in L^\infty(D_{\mathrm{mid}}),
+\]
+and
+\[
+(-\Delta)^s w=G_{\mathrm{mid}}
+\qquad\text{in }D_{\mathrm{mid}}
+\]
+in the weak sense.
+
+\medskip
+\noindent\textbf{Step 3: near the pole.}
+Since \(4r<d_0\), we have
+\[
+D_0=B_{3r/4}(0)\Subset\Omega.
+\]
+Moreover, since \(\chi\equiv0\) in \(B_r(0)\),
+\[
+w=0\qquad\text{in }B_r(0).
+\]
+Thus \(w\) vanishes in a neighborhood of \(D_0\).
+
+Let
+\[
+\phi\in C_c^\infty(D_0).
+\]
+For \(x\in D_0\), if \(w(y)\neq0\), then \(|y|\ge r\), while
+\(|x|\le3r/4\). Hence
+\[
+|x-y|\ge r/4.
+\]
+Therefore the principal value is not singular in \(D_0\), and
+\[
+\mathcal E(w,\phi)
+=
+\int_{D_0}G_0(x)\phi(x)\,\dd x,
+\]
+where
+\[
+G_0(x)
+:=
+-c_{N,s}
+\int_{\mathbb R^N}
+\frac{w(y)}
+{|x-y|^{N+2s}}
+\,\dd y.
+\]
+Moreover,
+\[
+|G_0(x)|
+\le
+C\int_\Omega |w(y)|\,\dd y
+\le
+C\int_\Omega |u(y)|\,\dd y.
+\]
+Since \(\Omega\) is bounded and \(u\in L^1_s(\mathbb R^N)\), the last integral
+is finite. Thus
+\[
+G_0\in L^\infty(D_0),
+\]
+and
+\[
+(-\Delta)^s w=G_0
+\qquad\text{in }D_0
+\]
+in the weak sense.
+
+\medskip
+\noindent\textbf{Step 4: patching the local equations.}
+We proved
+\[
+(-\Delta)^s w=F+h
+\qquad\text{in }U_\rho,
+\]
+with \(F+h\in L^\infty(U_\rho)\),
+\[
+(-\Delta)^s w=G_{\mathrm{mid}}
+\qquad\text{in }D_{\mathrm{mid}},
+\]
+with \(G_{\mathrm{mid}}\in L^\infty(D_{\mathrm{mid}})\), and
+\[
+(-\Delta)^s w=G_0
+\qquad\text{in }D_0,
+\]
+with \(G_0\in L^\infty(D_0)\).
+
+We now pass from these three local identities to a global one. Let
+\[
+\varphi\in C_c^\infty(\Omega)
+\]
+be arbitrary and set
+\[
+\varphi_0:=\zeta_0\varphi,
+\qquad
+\varphi_{\mathrm{mid}}:=\zeta_{\mathrm{mid}}\varphi,
+\qquad
+\varphi_\rho:=\zeta_\rho\varphi.
+\]
+Since \(\varphi\) has compact support in \(\Omega\) and the \(\zeta_i\)'s satisfy \eqref{eq:partition supports}, we have
+\[
+\varphi_0\in C_c^\infty(D_0),
+\qquad
+\varphi_{\mathrm{mid}}\in C_c^\infty(D_{\mathrm{mid}}),
+\qquad
+\varphi_\rho\in C_c^\infty(U_\rho).
+\]
+Moreover,
+\[
+\varphi=\varphi_0+\varphi_{\mathrm{mid}}+\varphi_\rho.
+\]
+By linearity of the whole-space bilinear form in the second variable,
+\[
+\mathcal E(w,\varphi)
+=
+\mathcal E(w,\varphi_0)
++
+\mathcal E(w,\varphi_{\mathrm{mid}})
++
+\mathcal E(w,\varphi_\rho).
+\]
+Applying the three local identities to the three pieces, we get
+\[
+\begin{aligned}
+\mathcal E(w,\varphi)
+&=
+\int_\Omega G_0\,\varphi_0\,\dd x
++
+\int_\Omega G_{\mathrm{mid}}\,\varphi_{\mathrm{mid}}\,\dd x
++
+\int_\Omega (F+h)\,\varphi_\rho\,\dd x\\
+&=
+\int_\Omega
+\Bigl(
+\zeta_0G_0
++
+\zeta_{\mathrm{mid}}G_{\mathrm{mid}}
++
+\zeta_\rho(F+h)
+\Bigr)\varphi\,\dd x.
+\end{aligned}
+\]
+Define
+\[
+G:=
+\zeta_0G_0
++
+\zeta_{\mathrm{mid}}G_{\mathrm{mid}}
++
+\zeta_\rho(F+h).
+\]
+Since each local right-hand side is bounded in its corresponding region and the
+partition functions are bounded, we have
+\[
+G\in L^\infty(\Omega).
+\]
+Thus
+\[
+\mathcal E(w,\varphi)=\int_\Omega G\varphi\,\dd x
+\qquad
+\forall\varphi\in C_c^\infty(\Omega),
+\]
+that is,
+\[
+(-\Delta)^s w=G
+\qquad\text{in }\Omega
+\]
+in the weak sense, with
+\[
+G\in L^\infty(\Omega).
+\]
+Moreover,
+\[
+w\in L^\infty(\mathbb R^N).
+\]
+Indeed, \(\chi=0\) in \(B_r(0)\), while \eqref{eq:u regularity} gives
+\[
+u\in C(\mathbb R^N\setminus\{0\})
+\]
+and \eqref{eq: exterior Dirichlet} gives \(u=0\) in \(\mathbb R^N\setminus\Omega\). Since \(\Omega\) is bounded,
+\(u\) is bounded on the compact set \(\overline\Omega\setminus B_r(0)\).
+Therefore \(w=\chi u\in L^\infty(\mathbb R^N)\).
+
+Since also
+\[
+w=0\qquad\text{in }\mathbb R^N\setminus\Omega,
+\]
+the global boundary regularity theorem of Ros-Oton--Serra for the fractional
+Dirichlet problem with bounded right-hand side, see
+\cite[Theorem 1.2]{RosOtonSerra}, yields
+\[
+\frac{w}{\delta^s}\in C^\alpha(\overline\Omega)
+\]
+for some \(\alpha\in(0,1)\).
+
+Finally, since \(w=u\) in \(U_\rho\), we obtain
+\[
+\frac{u}{\delta^s}\in C^\alpha(\overline{U_\rho}).
+\]
+Equivalently, setting
+\[
+\psi:=\frac{u}{\delta^s}\quad\text{in }U_\rho,
+\]
+we have
+\[
+\psi\in C^\alpha(\overline{U_\rho})
+\]
+and
+\[
+u(x)=\delta(x)^s\psi(x)
+\qquad\forall x \in U_\rho.
+\]
+This proves the proposition.
+\end{proof}
+
+\subsection{Comparison Principles}
+
+This section provides the two comparison ingredients that replace the standard maximum principle in the singular context. The weak comparison lemma starts the inequality in small caps despite the reflected pole, while the strong comparison lemma prevents an antisymmetric supersolution from touching zero away from that pole.
+The main point in the comparison argument is that \(w_\lambda=u_\lambda-u\) may be singular at \(0^\lambda\). 
+
+\begin{lemma}[Weak comparison principle in small domains]\label{weak comparison principle in small domains}
+Let \(\lambda<0\) be such that \(\ \Omega'_{\lambda} \subset \Omega\). Let \(D\subset\Omega_\lambda\) be a bounded domain and assume that
+\[
+\supp(w_\lambda^-)\subset D.
+\]
+Assume moreover that there exists \(M>0\) such that
+\[
+0\le u_\lambda<u\le M
+\quad\text{on }\supp(w_\lambda^-).
+\]
+Let \(L_M\) be the Lipschitz constant of \(f\) on \([0,M]\). If
+\[
+L_M<\lambda_1(D),
+\]
+then
+\[
+w_\lambda^-\equiv0
+\quad\text{in }\Omega_\lambda.
+\]
+\end{lemma}
+
+\begin{proof}
+Let
+\[
+v:=w_\lambda^-.
+\]
+We choose a capacity cutoff \(\psi_{\lambda,\varepsilon}\) around the reflected
+pole \(0^\lambda\), with
+\[
+0\le \psi_{\lambda,\varepsilon}\le 1,\qquad
+\psi_{\lambda,\varepsilon}=0\ \text{near }0^\lambda,\qquad
+\psi_{\lambda,\varepsilon}\to 1\ \text{a.e. in }\mathbb R^N,
+\]
+and
+\[
+[\psi_{\lambda,\varepsilon}]_{H^s(\mathbb R^N)}\to0.
+\]
+Set
+\[
+\phi_{\lambda,\varepsilon}
+:=
+v\psi_{\lambda,\varepsilon}^2.
+\]
+Since \(\psi_{\lambda,\varepsilon}\) vanishes near \(0^\lambda\), the function
+\(\phi_{\lambda,\varepsilon}\) is an admissible test function in the weak
+formulation for \(w_\lambda\). Subtracting the weak equations for \(u_\lambda\)
+and \(u\), and using \(w_\lambda=u_\lambda-u\) we get
+\[
+-\mathcal E(w_\lambda,\phi_{\lambda,\varepsilon})
+=
+\int_{\Omega_\lambda}
+\bigl(f(u)-f(u_\lambda)\bigr)
+v\psi_{\lambda,\varepsilon}^2\,\dd x.
+\]
+We now estimate the left-hand side. For simplicity, write
+\(\psi_\varepsilon:=\psi_{\lambda,\varepsilon}\). Since
+\[
+w_\lambda=w_\lambda^+-v,
+\]
+we have, for every \(x,y\in\mathbb R^N\),
+\[
+\begin{aligned}
+&-\bigl(w_\lambda(x)-w_\lambda(y)\bigr)
+\bigl(
+v(x)\psi_\varepsilon(x)^2
+-
+v(y)\psi_\varepsilon(y)^2
+\bigr)\\
+&=
+\bigl(v(x)-v(y)\bigr)
+\bigl(
+v(x)\psi_\varepsilon(x)^2
+-
+v(y)\psi_\varepsilon(y)^2
+\bigr)\\
+&-
+\bigl(w_\lambda^+(x)-w_\lambda^+(y)\bigr)
+\bigl(
+v(x)\psi_\varepsilon(x)^2
+-
+v(y)\psi_\varepsilon(y)^2
+\bigr).
+\end{aligned}
+\]
+The second term on the right-hand side is nonnegative. Indeed, since
+\(w_{\lambda}^+v=w_{\lambda}^+ w_{\lambda}^-=0\) we get
+\[
+\begin{aligned}
+&-
+\bigl(w_\lambda^+(x)-w_\lambda^+(y)\bigr)
+\bigl(
+v(x)\psi_\varepsilon(x)^2
+-
+v(y)\psi_\varepsilon(y)^2
+\bigr)\\
+&=
+w_\lambda^+(x)v(y)\psi_\varepsilon(y)^2
++
+w_\lambda^+(y)v(x)\psi_\varepsilon(x)^2
+\ge0.
+\end{aligned}
+\]
+Hence
+\[
+\begin{aligned}
+&-\bigl(w_\lambda(x)-w_\lambda(y)\bigr)
+\bigl(
+v(x)\psi_\varepsilon(x)^2
+-
+v(y)\psi_\varepsilon(y)^2
+\bigr)\\
+&\ge
+\bigl(v(x)-v(y)\bigr)
+\bigl(
+v(x)\psi_\varepsilon(x)^2
+-
+v(y)\psi_\varepsilon(y)^2
+\bigr).
+\end{aligned}
+\]
+Moreover
+\[
+\begin{aligned}
+&\bigl(v(x)-v(y)\bigr)
+\bigl(
+v(x)\psi_\varepsilon(x)^2
+-
+v(y)\psi_\varepsilon(y)^2
+\bigr)\\
+&=
+\bigl(
+v(x)\psi_\varepsilon(x)
+-
+v(y)\psi_\varepsilon(y)
+\bigr)^2\\
+&-
+v(x)v(y)
+\bigl(
+\psi_\varepsilon(x)-\psi_\varepsilon(y)
+\bigr)^2.
+\end{aligned}
+\]
+Therefore
+\[
+\begin{aligned}
+&-\bigl(w_\lambda(x)-w_\lambda(y)\bigr)
+\bigl(
+v(x)\psi_\varepsilon(x)^2
+-
+v(y)\psi_\varepsilon(y)^2
+\bigr)\\
+&\ge
+\bigl(
+v(x)\psi_\varepsilon(x)
+-
+v(y)\psi_\varepsilon(y)
+\bigr)^2\\
+&-
+v(x)v(y)
+\bigl(
+\psi_\varepsilon(x)-\psi_\varepsilon(y)
+\bigr)^2 .
+\end{aligned}
+\]
+Integrating this inequality against
+\[
+\frac{c_{N,s}}2
+\frac{\dd x\,\dd y}{|x-y|^{N+2s}},
+\]
+we obtain
+\begin{equation*}
+\begin{aligned}
+-\mathcal E(w_\lambda,v\psi_\varepsilon^2)
+&\ge
+\mathcal E(v\psi_\varepsilon,v\psi_\varepsilon)\\
+&\quad -
+\frac{c_{N,s}}2
+\iint_{\mathbb R^N\times\mathbb R^N}
+\frac{
+v(x)v(y)
+\bigl(
+\psi_\varepsilon(x)-\psi_\varepsilon(y)
+\bigr)^2
+}
+{|x-y|^{N+2s}}
+\,\dd x\,\dd y .
+\end{aligned}
+\end{equation*}
+Consequently,
+\begin{equation}\label{eq:errore}
+\begin{aligned}
+\mathcal E(v\psi_\varepsilon,v\psi_\varepsilon)
+&\le
+\int_{\Omega_\lambda}
+\bigl(f(u)-f(u_\lambda)\bigr)
+v\psi_\varepsilon^2\,\dd x\\
+&\quad+
+\frac{c_{N,s}}2
+\iint_{\mathbb R^N\times\mathbb R^N}
+\frac{
+v(x)v(y)
+\bigl(
+\psi_\varepsilon(x)-\psi_\varepsilon(y)
+\bigr)^2
+}
+{|x-y|^{N+2s}}
+\,\dd x\,\dd y.
+\end{aligned}
+\end{equation}
+On the set where \(v\neq0\), one has
+\[
+v=w_\lambda^-=u-u_\lambda,
+\qquad
+0\le u_\lambda<u\le M.
+\]
+Hence
+\[
+0\le v\le M
+\qquad\text{on }\operatorname{supp}v.
+\]
+Therefore
+\begin{equation}\label{eq:errore a zero}
+\begin{aligned}
+&\frac{c_{N,s}}2
+\iint_{\mathbb R^N\times\mathbb R^N}
+\frac{
+v(x)v(y)
+\bigl(
+\psi_\varepsilon(x)-\psi_\varepsilon(y)
+\bigr)^2
+}
+{|x-y|^{N+2s}}
+\,\dd x\,\dd y\\
+&\qquad\le
+C M^2
+[\psi_\varepsilon]_{H^s(\mathbb R^N)}^2
+\longrightarrow0.
+\end{aligned}
+\end{equation}
+Moreover,
+\[
+\psi_\varepsilon\to1
+\qquad\text{a.e. in }\mathbb R^N.
+\]
+On \(\operatorname{supp}v\), since \(f\) is Lipschitz on \([0,M]\), we have
+\[
+\bigl|
+f(u)-f(u_\lambda)
+\bigr|v\psi_\varepsilon^2
+\le
+L_Mv^2.
+\]
+Since right-hand side belongs to \(L^1(D)\), by dominated convergence theorem we get
+\begin{equation}\label{eq:conv dominata}
+\int_{\Omega_\lambda}
+\bigl(f(u)-f(u_\lambda)\bigr)
+v\psi_\varepsilon^2\,\dd x
+\longrightarrow
+\int_{\Omega_\lambda}
+\bigl(f(u)-f(u_\lambda)\bigr)
+v\,\dd x.
+\end{equation}
+By applying Fatou's lemma to \eqref{eq:errore} we get
+\begin{equation}\label{eq:Fatou}
+\mathcal E(v,v)
+\le
+\liminf_{\varepsilon\to0^+}
+\mathcal E(v\psi_\varepsilon,v\psi_\varepsilon).
+\end{equation}
+By using \eqref{eq:errore}, \eqref{eq:errore a zero}, \eqref{eq:conv dominata} and \eqref{eq:Fatou} we obtain
+\[
+\mathcal E(v,v)
+\le
+\int_{\Omega_\lambda}
+\bigl(f(u)-f(u_\lambda)\bigr)v\,\dd x.
+\]
+Since \(v=w_\lambda^-\), this gives
+\begin{equation}\label{eq:forma}
+\mathcal E(w_\lambda^-,w_\lambda^-)
+\le
+\int_{\Omega_\lambda}
+\bigl(f(u)-f(u_\lambda)\bigr)w_\lambda^-\,\dd x.
+\end{equation}
+The negative part is supported in \(D\), and on this set
+\begin{equation}\label{eq:parte negativa}
+w_\lambda^-=u-u_\lambda,
+\qquad
+0\le u_\lambda<u\le M,
+\end{equation}
+and
+\begin{equation}\label{eq:Lipschitz}
+|f(u)-f(u_\lambda)|
+\le
+L_M w_\lambda^-.
+\end{equation}
+Therefore, by using \eqref{eq:forma}, \eqref{eq:parte negativa} and \eqref{eq:Lipschitz} we get
+\[
+[w_\lambda^-]_{H^s(\R^N)}^2
+\le
+L_M\int_D (w_\lambda^-)^2\,\dd x.
+\]
+Using the variational characterization \eqref{eq:first eigenvalue} of \(\lambda_1(D)\),
+\[
+\int_D (w_\lambda^-)^2\,\dd x
+\le
+\frac1{\lambda_1(D)}
+[w_\lambda^-]_{H^s(\R^N)}^2.
+\]
+Hence
+\[
+[w_\lambda^-]_{H^s(\R^N)}^2
+\le
+\frac{L_M}{\lambda_1(D)}
+[w_\lambda^-]_{H^s(\R^N)}^2.
+\]
+Since \(L_M<\lambda_1(D)\), the last inequality forces \(w_\lambda^-\equiv0\).
+\end{proof}
+
+\begin{lemma}[Strong maximum principle]\label{strong maximum principle}
+Let \(\lambda<0\) be such that \( \Omega'_{\lambda} \subset \Omega\). Assume that
+\[
+w_\lambda\ge0
+\quad\text{in }\Sigma_\lambda\setminus\{0^\lambda\}.
+\]
+Then either
+\[
+w_\lambda\equiv0
+\quad\text{in }\Sigma_\lambda,
+\]
+or
+\[
+w_\lambda>0
+\quad\text{in }\Omega_\lambda\setminus\{0^\lambda\}.
+\]
+\end{lemma}
+
+\begin{proof}
+Take \(D\Subset\Omega_\lambda\setminus\{0^\lambda\}\). Since \(D\) is at positive distance from both \(0\) and \(0^\lambda\), every \(\varphi\in C_c^\infty(D)\) is admissible in the weak formulations of \(u\) and \(u_\lambda\). Thus
+\[
+\mathcal E(w_\lambda,\varphi)
+=
+\int_D(f(u_\lambda)-f(u))\varphi\,\dd x.
+\]
+In other words,
+\[
+(-\Delta)^s w_\lambda=c_\lambda(x)w_\lambda
+\quad\text{in }D
+\]
+in the weak sense, with \(c_\lambda\in L^\infty(D)\). Since \(w_\lambda\) is antisymmetric with respect to \(T_\lambda\) and nonnegative in $\Sigma_\lambda\setminus\{0^\lambda\}$, the strong maximum principle for antisymmetric supersolutions in \cite{FallJarohs} applies. Hence either \(w_\lambda\equiv0\) in \(\Sigma_\lambda\), or \(w_\lambda>0\) in \(D\). Since \(D\) was arbitrary we obtain the thesis.
+\end{proof}
+
+
+\section{The moving plane argument}
+\label{moving plane}
+
+
+We now apply the moving-plane method. The proof follows the classical three-step structure: first of all we show that the procedure can start. Then the plane continues moving up to the first geometrically critical position. In the end we show that the critical position is at the singular point. Repeating the argument in every direction forces the domain to be centered at the pole.
+
+We carry out the argument first in the direction \(e_1\), and set
+\[
+a:=\inf_{x\in\Omega}x_1.
+\]
+Let \(\bar\lambda\) be the first critical position: at \(\bar\lambda\), either an internal tangency occurs, or the plane is orthogonal to \(\partial\Omega\), or \(\bar\lambda=0\). Define
+\[
+\Lambda
+:=
+\left\{
+\lambda\in(a,\bar\lambda):
+w_\mu\ge0
+\text{ in }\Omega_\mu\setminus\{0^\mu\}
+\text{ for every }\mu\in(a,\lambda]
+\right\},
+\]
+and
+\[
+\lambda^*:=\sup\Lambda.
+\]
+
+\begin{proposition}[The plane starts]\label{prop:plane-starts}
+The set \(\Lambda\) is nonempty.
+\end{proposition}
+
+\begin{proof}
+We prove that, when \(\lambda\) is sufficiently close to \(a\), that is \(\Omega_\lambda\) is small, the reflected cap \(\Omega'_{\lambda}\) is contained in \(\Omega\), and both \(0\) and \(0^\lambda\) are outside \(\Omega_\lambda\). Indeed since \(0\in\Omega\), we have \(a<0\). We choose
+\(\sigma_0>0\) sufficiently small such that
+\[
+a+\sigma_0<\frac a2<0.
+\]
+Then, for every \(\lambda\in(a,a+\sigma_0)\), one has
+\[
+\lambda<0
+\]
+and hence \(0\notin\Sigma_\lambda\). Moreover,
+\[
+(0^\lambda)_1=2\lambda<a,
+\]
+so that \(0^\lambda\notin\Omega\), by the definition of \(a\). In particular,
+\[
+0\notin\Omega_\lambda,
+\qquad
+0^\lambda\notin\Omega_\lambda.
+\]
+Thus, in the initial position of the moving plane, neither \(u\) nor
+\(u_\lambda\) has a singularity in \(\Omega_\lambda\).  Hence \(u\) and \(u_\lambda\) are bounded and regular in \(\Omega_\lambda\). In \(\Omega_\lambda\),
+\[
+(-\Delta)^s w_\lambda=f(u_\lambda)-f(u)=c_\lambda(x)w_\lambda,
+\]
+where \(c_\lambda\in L^\infty(\Omega_\lambda)\), uniformly for \(\lambda\) close to \(a\). Since
+\[
+|\Omega_\lambda|\to0\quad\text{as }\lambda\to a,
+\]
+we have
+\[
+\lambda_1(\Omega_\lambda)\ge C_{N,s}|\Omega_\lambda|^{-\frac{2s}{N}}\to+\infty.
+\]
+Therefore, after taking \(\lambda\) close enough to \(a\),
+\[
+\|c_\lambda^+\|_{L^\infty(\Omega_\lambda)}<\lambda_1(\Omega_\lambda).
+\]
+Therefore by applying Lemma \ref{weak comparison principle in small domains} we get
+\[
+w_\lambda\ge0\quad\text{in }\Omega_\lambda.
+\]
+By applying Lemma \ref{strong maximum principle}, either \(w_\lambda\equiv0\) or \(w_\lambda>0\). By the Dirichlet condition the first alternative cannot occur. Hence \((a,a+\sigma)\subset\Lambda\) for some \(\sigma>0\).
+\end{proof}
+
+\begin{proposition}[Continuation up to the critical position]\label{continuation}
+It holds
+\[
+\lambda^*=\bar\lambda.
+\]
+\end{proposition}
+
+\begin{proof}
+Suppose, by contradiction, that \(\lambda^*<\bar\lambda\). We claim that there exists $\bar{\sigma} > 0$ such that it holds $u \le u_{\lambda^{*}+\sigma}$ in $\Omega_{\lambda^{*}+\sigma} \setminus \{0_{\lambda^{*}+\sigma}\}$ for any $0<\sigma <\bar{\sigma}$.
+
+Indeed by definition of \(\lambda^*\),
+\[
+w_{\lambda^*}\ge0
+\quad\text{in }\Omega_{\lambda^*}\setminus\{0^{\lambda^*}\}.
+\]
+By Lemma \ref{strong maximum principle}, either \(w_{\lambda^*}\equiv0\) in \(\Sigma_{\lambda^*}\), or
+\[
+w_{\lambda^*}>0
+\quad\text{in }\Omega_{\lambda^*}\setminus\{0^{\lambda^*}\}.
+\]
+The first alternative cannot occur since symmetry with respect to \(T_{\lambda^*}\), with \(\lambda^*<0\), would reflect the non-removable pole \(0\) into a second non-removable pole \(0^{\lambda^*}\neq0\). Hence the strict inequality holds.
+
+Choose a compact set
+\[
+K\Subset\Omega_{\lambda^*}\setminus\{0^{\lambda^*}\}
+\]
+such that \(w_{\lambda^*}>0\) on \(K\), and such that \(|\Omega_{\lambda^*}\setminus K|\) is small. Thanks to the uniform continuity we can find $\bar{\sigma}=\bar{\sigma}(K,\lambda^{*})$ such that $K \subset \Omega_{\lambda^{*}+\sigma} \setminus \{0_{\lambda^{*}+\sigma}\}$ and $w_{\lambda^{*}+\sigma} >0$ in $K$ for any $0<\sigma<\bar{\sigma}.$  Therefore 
+\[
+\supp w_{\lambda^*+\sigma}^-
+\subset
+D_\sigma:=\Omega_{\lambda^*+\sigma}\setminus K.
+\]
+Since $|\Omega_{\lambda^*}\setminus K|$ is small, by using \eqref{eq:first eigenvalue} we get
+\[
+L_M<\lambda_1(D_\sigma),
+\]
+where \(L_M\) is the Lipschitz constant of \(f\) on \([0,M]\). Since on the support of \(w_{\lambda^*+\sigma}^-\), one has \(0\le u_{\lambda^*+\sigma}<u\le M\), by applying Lemma \ref{weak comparison principle in small domains} we get
+\[
+w_{\lambda^*+\sigma}^-\equiv0.
+\]
+Thus \(w_{\lambda^*+\sigma}\ge0\) in \(\Omega_{\lambda^*+\sigma}\), so \(\lambda^*+\sigma\in\Lambda\), which contradicts the definition of \(\lambda^*\). Hence \(\lambda^*=\bar\lambda\).
+\end{proof}
+
+
+To exclude the critical contact alternatives, we shall use the Hopf
+lemma and the corner lemma of Fall--Jarohs. These results are stated for
+nonsingular antisymmetric supersolutions. We prove the following lemma, which shows that they can be applied in our singular setting
+at every boundary contact point which stays away from the original pole and from
+its reflected pole.
+
+\begin{lemma}
+\label{staccato dai poli}
+Let \(\lambda<0\) be such that \(\Omega'_{\lambda} \subset \Omega\).
+Let \(P\) be a boundary contact point arising in the moving-plane procedure and
+assume that
+\[
+P\notin\{0,0^\lambda\}.
+\]
+Then there exists a neighbourhood \(U_P\) of \(P\) such that
+\[
+\dist(U_P,\{0,0^\lambda\})>0.
+\]
+Moreover, if \(A \subset U_P\cap\Omega_\lambda\) is any bounded open set
+with \(\overline{A}\subset U_P\), then
+\[
+w_\lambda:=u_\lambda-u
+\]
+belongs to \(\mathcal{D}^{s}(A)\) in the sense of Fall--Jarohs, that is,
+\(w_{\lambda}\) satisifes
+\[
+\mathcal E(w_{\lambda},\varphi)<\infty
+\qquad
+\text{for every }\varphi\in H^s_0(A),
+\]
+and
+\[
+(-\Delta)^s w_\lambda=f(u_\lambda)-f(u)
+\qquad\text{in }A
+\]
+in the weak sense, that is,
+\[
+\mathcal E(w_\lambda,\phi)
+=
+\int_{A}
+\bigl(f(u_\lambda)-f(u)\bigr)\phi\,\dd x
+\qquad
+\text{for every }\phi\in H^s_0(A).
+\]
+\end{lemma}
+
+\begin{proof}
+Since \(P\notin\{0,0^\lambda\}\), we may choose \(r>0\) so small that, with
+\[
+U_P:=B_r(P),
+\]
+one has
+\[
+\dist(U_P,\{0,0^\lambda\})>0.
+\]
+We first prove that
+\[
+w_\lambda\in \mathcal{D}^{s}(A).
+\]
+Choose an open set \(V\) such that
+\[
+\overline{A}\subset V\Subset U_P.
+\]
+Since \(V\) is at positive distance from \(0\), and \(V\) is also at positive
+distance from \(0^\lambda\), both \(u\) and \(u_\lambda\) are nonsingular in
+\(V\). More precisely,
+\[
+u,u_{\lambda}\in W^{s,2}(V).
+\]
+Hence
+\[
+w_\lambda=u_\lambda-u\in W^{s,2}(V).
+\]
+We also have
+\[
+w_\lambda\in L^1_s(\mathbb R^N),
+\]
+since \(u,u_{\lambda} \in  L^1_s(\mathbb R^N)\).
+Let now \(\phi\in H^s_0(A)\). We show that
+\[
+\mathcal E(w_\lambda,\phi)<\infty.
+\]
+Choose \(\chi\in C_c^\infty(V)\) such that
+\[
+\chi\equiv1
+\qquad\text{in a neighbourhood of }\overline{A}.
+\]
+Write
+\[
+w_\lambda=\chi w_\lambda+(1-\chi)w_\lambda=:w_0+w_\infty.
+\]
+Since \(w_\lambda\in W^{s,2}(V)\) and \(\chi\in C_c^\infty(V)\), we have
+\[
+w_0\in H^s(\mathbb R^N).
+\]
+Therefore by Cauchy's inequality we get
+\begin{equation}\label{eq:w0}
+\begin{aligned}
+|\mathcal E(w_0,\phi)|
+&\le
+C
+[w_0]_{H^s(\mathbb R^N)}
+[\phi]_{H^s(\mathbb R^N)}
+<\infty .
+\end{aligned}
+\end{equation}
+It remains to control the tail part. Since \(\chi\equiv1\) in a neighbourhood
+of \(\overline{A}\), the function \(w_\infty\) vanishes in a
+neighbourhood of \(\overline{A}\). Thus there exists \(d>0\) such that
+\[
+\dist(A,\supp w_\infty)\ge d.
+\]
+Since \(\phi=0\) in \(\mathbb R^N \setminus A\), we have
+\[
+\mathcal E(w_\infty,\phi)
+=
+-c_{N,s}
+\int_{A}
+\phi(x)
+\left(
+\int_{\mathbb R^N}
+\frac{w_\infty(y)}{|x-y|^{N+2s}}\,\dd y
+\right)\dd x.
+\]
+Therefore
+\[
+|\mathcal E(w_\infty,\phi)|
+\le
+c_{N,s}
+\int_{A}
+|\phi(x)|
+\left(
+\int_{\mathbb R^N}
+\frac{|w_\infty(y)|}{|x-y|^{N+2s}}\,\dd y
+\right)\dd x.
+\]
+We now estimate the integral in \(y\) uniformly for \(x\in A\). Choose
+\(M>0\) such that
+\[
+A\subset B_M.
+\]
+Then
+\[
+\begin{aligned}
+\int_{\mathbb R^N}
+\frac{|w_\infty(y)|}{|x-y|^{N+2s}}\,\dd y
+&=
+\int_{B_{2M}}
+\frac{|w_\infty(y)|}{|x-y|^{N+2s}}\,\dd y  \\
+&\quad+
+\int_{\mathbb R^N\setminus B_{2M}}
+\frac{|w_\infty(y)|}{|x-y|^{N+2s}}\,\dd y.
+\end{aligned}
+\]
+For the first term, since \(x\in A\) and
+\(y\in\supp w_\infty\), we have \(|x-y|\ge d\). Hence
+\[
+\int_{B_{2M}}
+\frac{|w_\infty(y)|}{|x-y|^{N+2s}}\,\dd y
+\le
+d^{-N-2s}
+\int_{B_{2M}}|w_\lambda(y)|\,\dd y
+<\infty,
+\]
+since \(w_\lambda\in L^1_s(\mathbb R^N)\).
+
+For the second term, if \(x\in B_M\) and \(|y|\ge 2M\), then
+\[
+|x-y|\ge |y|-|x|\ge \frac{|y|}{2}.
+\]
+Therefore
+\[
+\frac1{|x-y|^{N+2s}}
+\le
+\frac{C}{1+|y|^{N+2s}},
+\]
+and so
+\[
+\int_{\mathbb R^N\setminus B_{2M}}
+\frac{|w_\infty(y)|}{|x-y|^{N+2s}}\,\dd y
+\le
+C
+\int_{\mathbb R^N}
+\frac{|w_\lambda(y)|}{1+|y|^{N+2s}}\,\dd y
+<\infty.
+\]
+Therefore there exists a constant \(C_{A}>0\) such that
+\[
+\sup_{x\in A}
+\int_{\mathbb R^N}
+\frac{|w_\infty(y)|}{|x-y|^{N+2s}}\,\dd y
+\le C_{A}.
+\]
+Thus
+\begin{equation}\label{eq:winfty}
+|\mathcal E(w_\infty,\phi)|
+\le
+C_{A}\int_{A}|\phi(x)|\,\dd x
+\le
+C_{A}|A|^{1/2}\|\phi\|_{L^2(A)}
+<\infty.
+\end{equation}
+By using \eqref{eq:w0} and \eqref{eq:winfty} we obtain
+\[
+\mathcal E(w_\lambda,\phi)<\infty
+\qquad
+\text{for every }\phi\in H^s_0(A).
+\]
+Hence
+\[
+w_\lambda\in \mathcal{D}^{s}(A).
+\]
+It only remains to prove the weak equation. Let first
+\[
+\phi\in C_c^\infty(A).
+\]
+Since \(\supp\phi\subset U_P\cap\Omega_\lambda\), and \(U_P\) is away from both
+poles, \(\phi\) is an admissible test function in the weak formulation for
+\(u\). Hence
+\[
+\mathcal E(u,\phi)
+=
+\int_{A}f(u)\phi\,\dd x.
+\]
+To obtain the equation for \(u_\lambda\), we consider the reflected test function
+\[
+\phi^\lambda(y):=\phi(y^\lambda).
+\]
+We have that \(\Omega'_\lambda\subset\Omega\)
+and since \(\supp\phi\) is away from \(0^\lambda\), the support of
+\(\phi^\lambda\) is away from \(0\). Thus \(\phi^\lambda\) is an admissible test
+function for \(u\). Then we get
+\[
+\mathcal E(u_\lambda,\phi)
+=
+\mathcal E(u,\phi^\lambda)
+=
+\int_{A}f(u_\lambda)\phi\,\dd x.
+\]
+Subtracting the two identities gives
+\[
+\mathcal E(w_\lambda,\phi)
+=
+\int_{A}
+\bigl(f(u_\lambda)-f(u)\bigr)\phi\,\dd x.
+\]
+By a density argument, the same identity holds for every
+\(\phi\in H^s_0(A)\).
+
+Finally, since \(u\) and \(u_\lambda\) are bounded in \(U_P\cap\Omega_\lambda\),
+and since \(f\in\Lip_{\loc}(\mathbb R_+)\), we can write
+\[
+f(u_\lambda)-f(u)=c_\lambda(x)w_\lambda
+\]
+with
+\[
+c_\lambda(x):=
+\begin{cases}
+\dfrac{f(u_\lambda(x))-f(u(x))}
+{u_\lambda(x)-u(x)},
+& u_\lambda(x)\neq u(x),\\[2ex]
+0,
+& u_\lambda(x)=u(x),
+\end{cases}
+\]
+and
+\[
+c_\lambda\in L^\infty(U_P\cap\Omega_\lambda).
+\]
+Moreover,
+\[
+w_\lambda(x^\lambda)=-w_\lambda(x).
+\]
+Therefore, in every such domain \(A\), the function
+\(w_\lambda\) satisfies the hypotheses required in
+the antisymmetric maximum principles of Fall--Jarohs. Hence their Hopf and
+corner lemmas can be applied locally at \(P\).
+\end{proof}
+
+
+\begin{lemma}[Exclusion of internal tangency]\label{no tangency}
+At the critical position \(\bar\lambda<0\), internal tangency of $\Omega'_{\lambda}$ with \(\partial\Omega\) cannot occur.
+\end{lemma}
+
+\begin{proof}
+Assume that internal tangency occurs at a point \(P\in\partial\Omega\cap\Sigma_{\bar\lambda}\), so that \(P^{\bar\lambda}\in\partial\Omega\). By Proposition \ref{continuation} and Lemma \ref{strong maximum principle},
+\[
+w_{\bar\lambda}>0
+\quad\text{in }\Omega_{\bar\lambda}\setminus\{0^{\bar\lambda}\}.
+\]
+Since
+\[
+u(P)=0,\qquad u_{\bar\lambda}(P)=u(P^{\bar\lambda})=0,
+\]
+then \(w_{\bar\lambda}(P)=0\). By Lemma \ref{staccato dai poli}, we can apply by \cite[Proposition 3.3]{FallJarohs} in a neighbourhood of $P$ obtaining
+\[
+(\partial_\eta)^s w_{\bar\lambda}(P)<0.
+\]
+On the other hand, by the overdetermined condition,
+\[
+(\partial_\eta)^s w_{\bar\lambda}(P)
+=0,
+\]
+which is a contradiction.
+\end{proof}
+
+\begin{lemma}[Exclusion of the corner case]\label{no corner}
+At the critical position \(\bar\lambda<0\), the moving plane \(T_{\bar\lambda}\) cannot be orthogonal to \(\partial\Omega\) at a point of \(T_{\bar\lambda}\cap\partial\Omega\).
+\end{lemma}
+
+\begin{proof}
+Suppose by contradiction that the orthogonality case occurs at
+\(Q\in T_{\bar\lambda}\cap\partial\Omega\). Since \(Q\in\partial\Omega\) and
+\(0\in\Omega\), we have \(Q\neq0\). Moreover, since
+\(Q\in T_{\bar\lambda}\), we have
+\[
+Q^{\bar\lambda}=Q.
+\]
+Consequently,
+\[
+|Q-0^{\bar\lambda}|=|Q^{\bar\lambda}-0^{\bar\lambda}|=|Q-0|>0.
+\]
+Thus \(Q\) is away from both the original pole and the reflected pole. By
+Lemma \ref{staccato dai poli}, we can apply
+\cite[Lemma 4.4]{FallJarohs} to \(w_{\bar\lambda}\) in a neighbourhood of
+\(Q\). Therefore there exist constants \(C>0\), \(t_0>0\), and an interior
+direction \(\bar\eta\) such that
+\begin{equation}\label{eq:corner1}
+w_{\bar\lambda}(Q+t\bar\eta)\ge C t^{1+s}
+\qquad\text{for every }t\in(0,t_0).
+\end{equation}
+On the other hand, since \(Q\in T_{\bar\lambda}\), the two points
+\[
+Q+t\bar\eta
+\qquad\text{and}\qquad
+(Q+t\bar\eta)^{\bar\lambda}
+\]
+both converge to the same boundary point \(Q\) as \(t\to0^+\). Hence, arguing
+as in \cite[Lemma 4.3]{FallJarohs}, using the boundary expansion of \(u\) at
+\(Q\) together with the overdetermined condition, we obtain
+\begin{equation}\label{eq:corner2}
+w_{\bar\lambda}(Q+t\bar\eta)=o(t^{1+s})
+\qquad\text{as }t\to0^+.
+\end{equation}
+Combining \eqref{eq:corner1} and \eqref{eq:corner2}, we get a contradiction.
+\end{proof}
+
+\begin{proposition}[The critical plane passes through the pole]
+In the direction \(e_1\),
+\[
+\bar\lambda=0.
+\]
+\end{proposition}
+
+\begin{proof}
+If by contradiction \(\bar\lambda<0\), then at the first critical position either internal tangency or orthogonality must occur. Lemma \ref{no tangency} excludes the first case and Lemma \ref{no corner} excludes the second. Hence \(\bar\lambda=0\).
+\end{proof}
+
+\begin{proof}[Proof of Theorem \ref{main}]
+The previous argument was performed in the direction \(e_1\). It gives that the critical plane in that direction is \(T_0=\{x_1=0\}\), and hence
+\[
+u(x)\le u(x^0)
+\quad\text{for }x\in\Omega\cap\{x_1<0\},
+\]
+where \(x^0=(-x_1,x_2,\dots,x_N)\). Repeating the argument from the opposite direction gives the reverse inequality. Thus both \(u\) and \(\Omega\) are symmetric with respect to \(\{x_1=0\}\). The monotonicity obtained from the moving plane procedure gives that \(u\) is increasing in the $x_{1}-$direction in $\{x_{1}<0\}$. Moreover by Lemma \ref{strong maximum principle} the monotonicity is strict.
+The same argument applies in every direction \(\nu\in\mathbb S^{N-1}\). Therefore \(\Omega\) is symmetric with respect to every hyperplane passing through \(0\). Since \(\Omega\) is connected and \(0\in\Omega\), it follows that \(\Omega=B_R(0)\) for some \(R>0\). 
+\end{proof}
+
+
+\section{The torsion case}
+\label{sec:torsion}
+
+In the torsion case \(f\equiv1\), subtracting the explicit torsion function leaves a nonnegative \(s\)-harmonic function in the punctured ball. The next lemma identifies the singular part as a multiple of the Green function.
+
+\begin{lemma}
+\label{identificazione parte singolare}
+Let \(N>2s\), \(R>0\), and set
+\[
+\delta_R(x):=R-|x|.
+\]
+Let \(v\) satisfy
+\[
+v\in L^1_s(\mathbb R^N)
+\cap W^{s,2}_{\loc}(B_R\setminus\{0\})
+\cap C(\mathbb R^N\setminus\{0\}),
+\]
+\[
+v\ge0 \quad\text{in }\mathbb R^N,
+\qquad
+v=0 \quad\text{in }\mathbb R^N\setminus B_R,
+\]
+and
+\[
+(-\Delta)^s v=0
+\quad\text{in }B_R\setminus\{0\}
+\]
+in the weak sense. Assume moreover that the singularity at the origin is
+non-removable. Then there exists \(k>0\) such that
+\[
+v(x)=kG_R(x,0)
+\qquad \forall x\in B_R\setminus\{0\}.
+\]
+\end{lemma}
+
+\begin{proof}
+By the fractional Bocher theorem \cite[Theorem~4]{LiWuXu}, applied in \(B_R\), there exists \(k\ge0\)
+such that
+\begin{equation}\label{eq:k delta0}
+(-\Delta)^s v=k\delta_0
+\qquad\text{in }B_R
+\end{equation}
+in the sense of distributions. By contradiction, if \(k=0\), then
+\[
+(-\Delta)^s v=0
+\qquad\text{in }B_R
+\]
+in the sense of distributions. Since \(v\in L^1_s(\mathbb R^N)\), the local
+regularity theorem for very weak \(s\)-harmonic functions \cite[Main Theorem, item~(2)]{CarbottiCitoLaMannaPallara} would imply that
+\(v\) is regular in a neighbourhood of the origin. This contradicts the
+assumption that the singularity at \(0\) is non-removable. Therefore
+\[
+k>0.
+\]
+Let us now set
+\begin{equation}\label{eq:differenza}
+z:=v-kG_R(\cdot,0),
+\end{equation}
+where \(G_R\) denotes the Green function of \((-\Delta)^s\) in \(B_R\) with zero
+exterior datum. We prove that \(z\equiv 0\). Since
+\begin{equation}\label{eq:G delta0}
+(-\Delta)^sG_R(\cdot,0)=\delta_0
+\qquad\text{in }B_R
+\end{equation}
+in the sense of distributions, by using \eqref{eq:k delta0},  \eqref{eq:differenza} and \eqref{eq:G delta0} we get
+\[
+(-\Delta)^s z=0
+\qquad\text{in }B_R
+\]
+in the sense of distributions. Moreover,
+\[
+z=0
+\qquad\text{in }\mathbb R^N\setminus B_R.
+\]
+We also have
+\[
+z\in L^1_s(\mathbb R^N).
+\]
+Indeed \(v\in L^1_s(\mathbb R^N)\) by assumption, while the Green function has
+the singular behaviour
+\[
+G_R(x,0)\sim C|x|^{2s-N}
+\qquad\text{as }x\to0.
+\]
+Since \(N>2s\),
+\[
+\int_0^\varepsilon r^{2s-N}r^{N-1}\,\dd r
+=
+\int_0^\varepsilon r^{2s-1}\,\dd r<\infty,
+\]
+and therefore \(G_R(\cdot,0)\in L^1_s(\mathbb R^N)\). Thus
+\(z\in L^1_s(\mathbb R^N)\).
+
+It follows that \(z\) is a very weak \(s\)-harmonic function in the ball
+\(B_R\). By the local regularity theorem for very weak \(s\)-harmonic functions \cite[Main Theorem, item~(2)]{CarbottiCitoLaMannaPallara},
+after scaling \(B_R\) into the unit ball, we get
+\[
+z\in C^\infty_{\loc}(B_R).
+\]
+
+We now prove that \(z\) is continuous in a neighbourhood of the boundary. 
+Since \(v\) satisfies the hypotheses of
+Proposition \ref{boundary regularity} in \(\Omega=B_R\), with
+right-hand side \(F\equiv0\), there exist \(\rho>0\), \(\alpha\in(0,1)\), and
+\(\psi_v\in C^\alpha(\overline{U_\rho})\), where
+\[
+U_\rho:=\{x\in B_R:\delta_R(x)<\rho\},
+\]
+such that
+\[
+v(x)=\delta_R(x)^s\psi_v(x)
+\qquad\text{for }x\in U_\rho.
+\]
+In particular,
+\[
+|v(x)|\le C\delta_R(x)^s
+\qquad\text{for }x\in U_\rho.
+\]
+Moreover, by the Boggio's formula,
+\[
+G_R(x,0)
+=
+c_{N,s}|x|^{2s-N}
+\int_0^{(R^2-|x|^2)/|x|^2}
+\frac{t^{s-1}}{(1+t)^{N/2}}\,\dd t .
+\]
+If \(x\in U_\rho\) and \(\rho<R/2\), then \(|x|\ge R/2\). Hence
+\[
+R^2-|x|^2=(R-|x|)(R+|x|)
+=\delta_R(x)(R+|x|)
+\le 2R\delta_R(x),
+\]
+while
+\[
+|x|^2\ge \frac{R^2}{4}.
+\]
+Therefore
+\[
+\frac{R^2-|x|^2}{|x|^2}
+\le
+\frac{8}{R}\delta_R(x),
+\]
+and consequently
+\[
+\left(\frac{R^2-|x|^2}{|x|^2}\right)^s
+\le
+C\delta_R(x)^s .
+\]
+where \(C=C(s,R)\) is a positive constant. Therefore
+\[
+G_R(x,0)
+\le
+c_{N,s}|x|^{2s-N}
+\int_0^{(R^2-|x|^2)/|x|^2}
+t^{s-1}\,\dd t \le C \left(\frac{R^2-|x|^2}{|x|^2}\right)^s
+\le
+C\delta_R(x)^s. 
+\]
+Therefore
+\[
+|z(x)|
+\le
+|v(x)|+kG_R(x,0)
+\le
+C\delta_R(x)^s
+\qquad\text{for }x\in U_\rho.
+\]
+Consequently,
+\[
+z(x)\to0
+\qquad\text{as }x\to\partial B_R,\ x\in B_R.
+\]
+Since \(z=0\) in \(\mathbb R^N\setminus B_R\), we conclude that
+\[
+z\in C(\mathbb R^N).
+\]
+Hence \(z\) is a pointwise continuous solution of
+\[
+\begin{cases}
+(-\Delta)^s z=0 & \text{in }B_R,\\
+z=0 & \text{in }\mathbb R^N\setminus B_R.
+\end{cases}
+\]
+Therefore we can apply 
+\cite[Theorem 2.10]{Bucur} with exterior datum
+\(g\equiv0\), we obtain
+\[
+z\equiv0
+\qquad\text{in }\mathbb R^N.
+\]
+Therefore
+\[
+v=kG_R(\cdot,0)
+\qquad\text{in }B_R\setminus\{0\}.
+\]
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{torsion}]
+By Theorem~\ref{main},
+\[
+\Omega=B_R(0).
+\]
+Let \(\tau_{R}\) be the fractional torsion function of \(B_R\), namely the
+unique pointwise continuous solution of
+\[
+\begin{cases}
+(-\Delta)^s\tau_{R}=1 & \text{in }B_R,\\
+\tau_{R}=0 & \text{in }\R^N\setminus B_R.
+\end{cases}
+\]
+The uniqueness and the Green representation for this Dirichlet problem follow
+from the representation theorem for the ball, see Bucur \cite[Theorem~3.2]{Bucur}.
+Set
+\[
+v:=u-\tau_{R}.
+\]
+Then
+\[
+(-\Delta)^s v=0
+\quad\text{in }B_R\setminus\{0\},
+\qquad
+v=0
+\quad\text{in }\R^N\setminus B_R.
+\]
+We claim that \(v\ge0\) in \(B_R\setminus\{0\}\). Let
+\[
+v^-:=\max\{-v,0\}.
+\]
+Since \(u>0\), we have
+\[
+v^-=\tau_{R}-u\le \tau_{R}, \quad \text{on} \quad \{v<0\}.
+\]
+In particular \(v^-\in L^\infty(B_R)\), since \(\tau_{R}\) is bounded.
+
+Let \(\psi_\varepsilon\) be a capacity cutoff around the pole \(0\), with
+\[
+0\le\psi_\varepsilon\le1,\qquad
+\psi_\varepsilon=0\ \text{near }0,\qquad
+\psi_\varepsilon\to1\ \text{a.e. in }\mathbb R^N,
+\]
+and
+\[
+[\psi_\varepsilon]_{H^s(\mathbb R^N)}\to0.
+\]
+Then \(v^-\psi_\varepsilon^2\) is an admissible test function in
+\(B_R\setminus\{0\}\). Since \((-\Delta)^s v=0\) in $B_{R} \setminus \{0\}$, we get
+\begin{equation}\label{eq:torsion-negative-test}
+\mathcal E(v,v^-\psi_\varepsilon^2)=0.
+\end{equation}
+By using the same strategy of Lemma \ref{weak comparison principle in small domains} we arrive to 
+\begin{equation*}
+\begin{aligned}
+-\mathcal E(v,v^{-}\psi_\varepsilon^2)
+&\ge
+\mathcal E(v^{-}\psi_\varepsilon,v^{-}\psi_\varepsilon)\\
+&\quad -
+\frac{c_{N,s}}2
+\iint_{\mathbb R^N\times\mathbb R^N}
+\frac{
+v^{-}(x)v^{-}(y)
+\bigl(
+\psi_\varepsilon(x)-\psi_\varepsilon(y)
+\bigr)^2
+}
+{|x-y|^{N+2s}}
+\,\dd x\,\dd y .
+\end{aligned}
+\end{equation*}
+and by \eqref{eq:torsion-negative-test} we get
+\[
+\mathcal E(v^-\psi_\varepsilon,v^-\psi_\varepsilon)
+\le
+\frac{c_{N,s}}2
+\iint_{\mathbb R^N\times\mathbb R^N}
+\frac{
+v^-(x)v^-(y)(\psi_\varepsilon(x)-\psi_\varepsilon(y))^2
+}
+{|x-y|^{N+2s}}
+\,\dd x\,\dd y.
+\]
+Since \(v^-\in L^\infty(B_R)\), we have
+\begin{equation}\label{eq:seminorma}
+\mathcal E(v^-\psi_\varepsilon,v^-\psi_\varepsilon) \le C[\psi_\varepsilon]_{H^s(\mathbb R^N)}^2.
+\end{equation}
+By Fatou's lemma to \eqref{eq:seminorma} we get
+\[
+\mathcal E(v^-,v^-)=0.
+\]
+Thus \(v^-\equiv0\), and consequently
+\[
+v\ge0
+\quad\text{in }B_R\setminus\{0\}.
+\]
+Therefore we can apply Lemma \ref{identificazione parte singolare}, that is there exists a constant
+\(k>0\) such that
+\[
+v(x)=k G_{R}(x,0).
+\]
+Consequently,
+\begin{equation}\label{eq:decomposizione esplicita}
+u(x)=\tau_{R}(x)+k G_{R}(x,0).
+\end{equation}
+It remains to compute \(k\) from the overdetermined condition. Let
+\[
+\delta(x):=\dist(x,\partial B_R)=R-r,
+\]
+where $r:=|x|.$ Since
+\[
+(\partial_\eta)^s u(x_0)
+=
+-\lim_{t\to0^+}
+\frac{u(x_0-t\eta(x_0))}{t^s},
+\qquad \forall x_0\in\partial B_R,
+\]
+the condition \((\partial_\eta)^s u=c\) is equivalent to
+\[
+\lim_{x\to x_0}
+\frac{u(x)}{\delta(x)^s}
+=
+-c.
+\]
+Using the decomposition \eqref{eq:decomposizione esplicita}, we get
+\begin{equation}\label{eq:limiti}
+-c
+=
+\lim_{x\to x_0}
+\frac{\tau_{R}(x)}{\delta(x)^s}
++
+k
+\lim_{x\to x_0}
+\frac{G_{R}(x,0)}{\delta(x)^s}.
+\end{equation}
+since the torsion function is explicit, see as an example \cite{RosOtonSerra},
+\begin{equation*}
+\tau_{R}(x)
+=
+\gamma_{N,s}\bigl(R^2-r^2\bigr)_+^s,
+\end{equation*}
+the torsion limit is
+\begin{equation}\label{eq:limite torsione}
+\lim_{r\to R^-}
+\frac{\tau_{R}(x)}{(R-r)^s}
+=
+\gamma_{N,s}(2R)^s.
+\end{equation}
+Let us now define
+\begin{equation}\label{eq:G limite}
+\mathcal G_{R}
+:=
+\lim_{x\to x_0}
+\frac{G_{R}(x,0)}{\delta(x)^s}.
+\end{equation}
+Since $G_{R}$ is radial this limit does not depend on \(x_0\), and by using \eqref{eq:limiti}, \eqref{eq:limite torsione} and \eqref{eq:G limite} we obtain
+\[
+-c=\gamma_{N,s}(2R)^s+k\mathcal G_{R}.
+\]
+Thus
+\begin{equation}\label{eq:k}
+k=
+\frac{-c-\gamma_{N,s}(2R)^s}{\mathcal G_{R}}.
+\end{equation}
+Recall that, by the Boggio's formula,
+\begin{equation}\label{eq:Boggio's}
+G_{R}(x,0)
+=
+c_{N,s}r^{2s-N}
+\int_0^{(R^2-r^2)/r^2}
+\frac{t^{s-1}}{(1+t)^{N/2}}\dd t.
+\end{equation}
+Moreover, let us set
+\[
+A_r:=\frac{R^2-r^2}{r^2}.
+\]
+Then
+\begin{equation}\label{eq:1}
+\lim_{r\to R^-}\frac{A_r}{R-r}=\frac2R,
+\end{equation}
+and by the change of variables \(t=A_{r}\rho\), we have
+\[
+\frac{1}{A_{r}^s}\int_0^{A_{r}}
+\frac{t^{s-1}}{(1+t)^{N/2}}\,dt
+=
+\int_0^1
+\frac{\rho^{s-1}}{(1+A_{r}\rho)^{N/2}}\,d\rho.
+\]
+Since the integrand converges pointwise to \(\rho^{s-1}\) and is dominated by
+\(\rho^{s-1}\in L^1(0,1)\), the dominated convergence theorem gives
+\begin{equation}\label{eq:2}
+\lim_{A_{r}\to0^+}
+\frac{1}{A^{s}_{r}}
+\int_0^{A_{r}}
+\frac{t^{s-1}}{(1+t)^{N/2}}\,dt
+=
+\int_0^1\rho^{s-1}\,d\rho
+=
+\frac1s.
+\end{equation}
+Consequently, by using \eqref{eq:1} and \eqref{eq:2} we get
+\begin{equation}\label{eq:finale}
+\lim_{r\to R^-}
+\frac1{(R-r)^s}
+\int_0^{A_r}
+\frac{t^{s-1}}{(1+t)^{N/2}}\dd t
+=
+\lim_{r\to R^-} \left(\frac{1}{A_{r}^s} \int_0^{A_r}
+\frac{t^{s-1}}{(1+t)^{N/2}}\dd t\right) \left( \frac{A_r}{R-r} \right)^s
+=
+\frac1s\left(\frac2R\right)^s.
+\end{equation}
+Since \(r^{2s-N}\to R^{2s-N}\), by using \eqref{eq:G limite}, \eqref{eq:Boggio's} and \eqref{eq:finale} we get
+\begin{equation}\label{eq:G limite calcolato}
+\mathcal G_{R}
+=
+\frac{c_{N,s}}{s}
+2^sR^{s-N}.
+\end{equation}
+Therefore by using \eqref{eq:k} and \eqref{eq:G limite calcolato} we get 
+\[
+k
+=
+\frac{sR^{N-s}}{c_{N,s}2^s}
+\left(-c-\gamma_{N,s}(2R)^s\right).
+\]
+\end{proof}
+
+\subsection{Consequences of the torsion decomposition}
+
+We now prove two consequences of the previous classification. The first one identifies the threshold between a removable and a non-removable pole. The second one gives the asymptotic profile of the singularity.
+In particular the explicit value of \(k\) gives some additional information on the admissible
+values of the overdetermined datum.
+
+\begin{corollary}
+\label{cor:threshold-removability}
+It holds:
+\[
+k>0
+\quad\Longleftrightarrow\quad
+-c>\gamma_{N,s}(2R)^s.
+\]
+Conversely, the threshold value
+\[
+c=-\gamma_{N,s}(2R)^s
+\]
+corresponds to \(k=0\), and hence to the removable case
+\[
+u=\tau_{R}.
+\]
+\end{corollary}
+
+\begin{proof}
+Corollary \ref{torsion} gives
+\[
+k=
+\frac{sR^{N-s}}{c_{N,s}2^s}
+\left(-c-\gamma_{N,s}(2R)^s\right).
+\]
+Therefore \(k>0\) if and only if
+\[
+-c>\gamma_{N,s}(2R)^s.
+\]
+If equality holds, then \(k=0\), and the singular Green part disappears.
+Thus \(u=\tau_{R}\), so the isolated singularity is removable.
+\end{proof}
+
+\begin{corollary}[Asymptotic profile of the singularity]
+\label{cor:singular-asymptotic}
+Assume that the hypotheses of Corollary \ref{torsion} hold. Then
+\[
+\lim_{x\to0}|x|^{N-2s}u(x)
+=
+k\,c_{N,s}
+\int_0^{+\infty}\frac{t^{s-1}}{(1+t)^{N/2}}\,\dd t.
+\]
+In other words,
+\[
+u(x)
+\sim
+k\,c_{N,s}
+\left(\int_0^{+\infty}\frac{t^{s-1}}{(1+t)^{N/2}}\,\dd t\right)
+|x|^{2s-N}
+\qquad\text{as }x\to0.
+\]
+In particular, using the Beta function identity,
+\[
+\int_0^{+\infty}\frac{t^{s-1}}{(1+t)^{N/2}}\,\dd t
+=
+\frac{\Gamma(s)\Gamma(N/2-s)}{\Gamma(N/2)},
+\]
+therefore
+\[
+\lim_{x\to0}|x|^{N-2s}u(x)
+=
+k\,c_{N,s}
+\frac{\Gamma(s)\Gamma(N/2-s)}{\Gamma(N/2)}.
+\]
+\end{corollary}
+
+\begin{proof}
+By Corollary \ref{torsion},
+\[
+u(x)=\tau_{R}(x)+k G_{R}(x,0).
+\]
+Let us recall the Boggio's formula:
+\[
+G_{R}(x,0)
+=
+c_{N,s}|x|^{2s-N}
+\int_0^{(R^2-|x|^2)/|x|^2}
+\frac{t^{s-1}}{(1+t)^{N/2}}\,\dd t.
+\]
+As \(x\to0\), it holds
+\[
+\frac{R^2-|x|^2}{|x|^2}\to+\infty.
+\]
+Moreover the integral
+\[
+\int_0^{+\infty}\frac{t^{s-1}}{(1+t)^{N/2}}\,\dd t
+\]
+is finite since \(N>2s\). Therefore, by monotone convergence theorem:
+\[
+\lim_{x\to0}|x|^{N-2s}G_{R}(x,0)
+=
+c_{N,s}
+\int_0^{+\infty}\frac{t^{s-1}}{(1+t)^{N/2}}\,\dd t.
+\]
+Multiplying by \(k\) we get the result. The identity for the integral is given by the Beta function formula
+\[
+B(s,N/2-s)=
+\int_0^{+\infty}\frac{t^{s-1}}{(1+t)^{N/2}}\,\dd t
+=
+\frac{\Gamma(s)\Gamma(N/2-s)}{\Gamma(N/2)}.
+\]
+\end{proof}
+
+\begin{thebibliography}{99}
+
+\bibitem{AbatangeloJarohsSaldana}
+N. Abatangelo, S. Jarohs and A. Salda\~na,
+\emph{Integral representation of solutions to higher-order fractional Dirichlet problems on balls},
+Commun. Contemp. Math. \textbf{20} (2018), no. 8, Art. 1850002, 36 pp.
+doi: \texttt{10.1142/S0219199718500025}.
+
+\bibitem{BogdanBHP}
+K. Bogdan,
+\emph{The boundary Harnack principle for the fractional Laplacian},
+Studia Math. 123 (1997), no. 1, 43--80.
+
+\bibitem{Bucur}
+C. Bucur,
+\emph{Some observations on the Green function for the ball in the fractional Laplace framework},
+Commun. Pure Appl. Anal. 15 (2016), 657--699.
+
+\bibitem{CarbottiCitoLaMannaPallara}
+A. Carbotti, S. Cito, D. A. La Manna and D. Pallara,
+\emph{Local regularity of very weak \(s\)-harmonic functions via fractional
+difference quotients},
+Rend. Lincei Mat. Appl. \textbf{35} (2024), 365--395.
+doi: \texttt{10.4171/RLM/1045}.
+
+\bibitem{ESS}
+F. Esposito, B. Sciunzi and N. Soave,
+\emph{Notes on overdetermined singular problems},
+Bull. London Math. Soc. 56 (2024), 1341--1350.
+
+\bibitem{FallJarohs}
+M. M. Fall and S. Jarohs,
+\emph{Overdetermined problems with fractional Laplacian},
+ESAIM Control Optim. Calc. Var. 21 (2015), 924--938.
+
+\bibitem{Kwasnicki}
+M. Kwa\'snicki,
+\emph{Ten equivalent definitions of the fractional Laplace operator},
+Fract. Calc. Appl. Anal. 20 (2017), no. 1, 7--51.
+
+\bibitem{LiWuXu}
+C. Li, Z. Wu and H. Xu,
+\emph{Maximum principles and B\^ocher type theorems},
+Proc. Natl. Acad. Sci. USA 115 (2018), no. 27, 6976--6979.
+
+\bibitem{MPS}
+L. Montoro, F. Punzo and B. Sciunzi,
+\emph{Qualitative properties of singular solutions to nonlocal problems},
+Ann. Mat. Pura Appl. 197 (2018), 941--964.
+
+\bibitem{RosOtonSerra}
+X. Ros-Oton and J. Serra,
+\emph{The Dirichlet problem for the fractional Laplacian: regularity up to the boundary},
+J. Math. Pures Appl. 101 (2014), 275--302.
+
+\bibitem{Serrin}
+J. Serrin,
+\emph{A symmetry problem in potential theory},
+Arch. Rational Mech. Anal. 43 (1971), 304--318.
+
+\end{thebibliography}
+
+\end{document}
