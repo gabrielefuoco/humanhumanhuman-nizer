@@ -6,19 +6,48 @@
         font-family: 'Inter', sans-serif; 
         background-color: transparent; 
         color: #f8fafc; 
-        padding: 10px; 
-        line-height: 1.8;
+        padding: 20px; 
+        line-height: 1.9;
         font-size: 16px;
     }
-    .word { cursor: pointer; transition: color 0.2s; padding: 0 2px; }
+    .sentence {
+        position: relative;
+        display: inline;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+    .sentence.critical {
+        background-color: rgba(248, 113, 113, 0.1);
+        border-bottom: 1px dashed rgba(248, 113, 113, 0.5);
+    }
+    .sentence:hover .rewrite-btn { display: inline-block; }
+    
+    .rewrite-btn {
+        display: none; 
+        position: absolute; 
+        top: -30px; 
+        left: 0; 
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
+        color: white;
+        font-size: 12px; 
+        padding: 4px 10px; 
+        border-radius: 12px; 
+        cursor: pointer; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        white-space: nowrap; 
+        font-weight: bold; 
+        z-index: 100;
+        user-select: none;
+    }
+    .rewrite-btn:hover { transform: translateY(-2px); }
+
+    .word { cursor: pointer; transition: color 0.2s; padding: 0 1px; }
     .word.low-ppl { 
         color: #f87171; 
-        border-bottom: 1px dashed #f87171; 
         font-weight: 600;
     }
     .word.cliche { 
         color: #eab308; 
-        border-bottom: 1px dashed #eab308; 
         font-weight: 600;
     }
     .word:hover { background-color: rgba(255,255,255,0.1); border-radius: 3px; }
@@ -60,49 +89,74 @@
   
   <script src="https://unpkg.com/streamlit-component-lib@1.3.0/dist/streamlit.js"></script>
   <script>
-    let currentSelectedWordId = null;
-    let wordsData = [];
-    let synonymsData = {}; // wordId -> { synonyms: [...] }
+    let currentSIdx = null;
+    let currentWIdx = null;
+    let sentencesData = [];
+    let synonymsData = {}; 
     let lastText = "";
 
     function renderText() {
         const container = document.getElementById("text-container");
         container.innerHTML = "";
-        wordsData.forEach((w, i) => {
-            let span = document.createElement("span");
-            span.textContent = w.word + " ";
+        
+        sentencesData.forEach((s, sIdx) => {
+            let sSpan = document.createElement("span");
+            sSpan.className = "sentence" + (s.isCritical ? " critical" : "");
+            sSpan.dataset.idx = sIdx;
             
-            let classes = ["word"];
-            if (w.isLowPpl) classes.push("low-ppl");
-            if (w.isCliche) classes.push("cliche");
-            span.className = classes.join(" ");
-            span.dataset.id = i;
+            if (s.isCritical) {
+                let btn = document.createElement("div");
+                btn.className = "rewrite-btn";
+                btn.textContent = "🪄 Riscrivi frase";
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    Streamlit.setComponentValue({ action: "rewrite_sentence", sentence_idx: sIdx, text: s.text });
+                    btn.textContent = "⏳ Riscrittura...";
+                    btn.style.pointerEvents = "none";
+                };
+                sSpan.appendChild(btn);
+            }
             
-            span.addEventListener("contextmenu", (e) => {
-                if(w.isLowPpl || w.isCliche) {
-                    e.preventDefault();
-                    showContextMenu(e.pageX, e.pageY, i);
-                }
+            s.words.forEach((w, wIdx) => {
+                let wSpan = document.createElement("span");
+                wSpan.textContent = w.word + " ";
+                
+                let classes = ["word"];
+                if (w.isLowPpl) classes.push("low-ppl");
+                if (w.isCliche) classes.push("cliche");
+                wSpan.className = classes.join(" ");
+                
+                wSpan.addEventListener("contextmenu", (e) => {
+                    if(w.isLowPpl || w.isCliche) {
+                        e.preventDefault();
+                        showContextMenu(e.pageX, e.pageY, sIdx, wIdx);
+                    }
+                });
+                sSpan.appendChild(wSpan);
             });
-            container.appendChild(span);
+            
+            container.appendChild(sSpan);
+            container.appendChild(document.createTextNode(" ")); // space between sentences
         });
         Streamlit.setFrameHeight();
     }
 
-    function showContextMenu(x, y, wordId) {
+    function showContextMenu(x, y, sIdx, wIdx) {
         const menu = document.getElementById("context-menu");
-        currentSelectedWordId = wordId;
-        const w = wordsData[wordId];
+        currentSIdx = sIdx;
+        currentWIdx = wIdx;
+        const w = sentencesData[sIdx].words[wIdx];
         
         menu.style.left = x + "px";
         menu.style.top = y + "px";
         menu.style.display = "block";
         
-        if (!synonymsData[wordId] || synonymsData[wordId].loading) {
-            menu.innerHTML = "<div class='loader'>Calcolo sinonimi e PPL...</div>";
-            Streamlit.setComponentValue({ action: "get_synonyms", word_id: wordId, word: w.word });
+        const cacheKey = sIdx + "_" + wIdx;
+        if (!synonymsData[cacheKey] || synonymsData[cacheKey].loading) {
+            menu.innerHTML = "<div class='loader'>Calcolo sinonimi...</div>";
+            Streamlit.setComponentValue({ action: "get_synonyms", sentence_idx: sIdx, word_idx: wIdx, word: w.word });
         } else {
-            renderSynonymsMenu(synonymsData[wordId].synonyms);
+            renderSynonymsMenu(synonymsData[cacheKey].synonyms);
         }
     }
 
@@ -118,7 +172,12 @@
             item.className = "menu-item";
             item.innerHTML = `${syn.word} <span class='score'>PPL: ${syn.score.toFixed(1)}</span>`;
             item.onclick = () => {
-                Streamlit.setComponentValue({ action: "replace_word", word_id: currentSelectedWordId, new_word: syn.word });
+                Streamlit.setComponentValue({ 
+                    action: "replace_word", 
+                    sentence_idx: currentSIdx, 
+                    word_idx: currentWIdx, 
+                    new_word: syn.word 
+                });
                 menu.style.display = "none";
             };
             menu.appendChild(item);
@@ -133,16 +192,17 @@
         const data = event.detail.args;
         
         if (data.synonyms_update) {
-            synonymsData[data.synonyms_word_id] = { loading: false, synonyms: data.synonyms_list };
-            if (currentSelectedWordId === data.synonyms_word_id && document.getElementById("context-menu").style.display === "block") {
+            const cacheKey = data.synonyms_s_idx + "_" + data.synonyms_w_idx;
+            synonymsData[cacheKey] = { loading: false, synonyms: data.synonyms_list };
+            if (currentSIdx === data.synonyms_s_idx && currentWIdx === data.synonyms_w_idx && document.getElementById("context-menu").style.display === "block") {
                 renderSynonymsMenu(data.synonyms_list);
             }
             return; 
         }
 
-        if (data.words && JSON.stringify(data.words) !== lastText) {
-            lastText = JSON.stringify(data.words);
-            wordsData = data.words;
+        if (data.sentences && JSON.stringify(data.sentences) !== lastText) {
+            lastText = JSON.stringify(data.sentences);
+            sentencesData = data.sentences;
             synonymsData = {};
             renderText();
         }
