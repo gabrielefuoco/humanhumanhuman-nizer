@@ -297,6 +297,8 @@ if "to_process" not in st.session_state:
     st.session_state.to_process = []
 if "synonyms_payload" not in st.session_state:
     st.session_state.synonyms_payload = None
+if "last_action_id" not in st.session_state:
+    st.session_state.last_action_id = None
 
 # --- UI PRINCIPALE ---
 st.title("✨ The Humanizer Pipeline")
@@ -379,52 +381,56 @@ if st.session_state.processed_sentences:
         key="interactive_editor"
     )
 
+    # GESTIONE EVENTI DA JS
     if component_value:
-        action = component_value.get("action")
-        
-        if action == "get_synonyms":
-            s_idx = component_value["sentence_idx"]
-            w_idx = component_value["word_idx"]
-            word = component_value["word"]
+        action_id = str(component_value)
+        if st.session_state.last_action_id != action_id:
+            st.session_state.last_action_id = action_id
+            action = component_value.get("action")
             
-            syns = get_offline_synonyms(word)
-            syns_scores = calculate_synonym_scores(st.session_state.processed_sentences[s_idx], w_idx, syns)
-            
-            st.session_state.synonyms_payload = {
-                "s_idx": s_idx,
-                "w_idx": w_idx,
-                "syns_scores": syns_scores
-            }
-            st.rerun()
-            
-        elif action == "replace_word":
-            s_idx = component_value["sentence_idx"]
-            w_idx = component_value["word_idx"]
-            new_word = component_value["new_word"]
-            
-            s = st.session_state.processed_sentences[s_idx]
-            old_word = s["words"][w_idx]["word"]
-            new_text = s["text"].replace(old_word, new_word, 1)
-            
-            original_text = s.get("original_text", s["text"])
-            reprocessed = process_sentence(new_text)
-            reprocessed["original_text"] = original_text
-            st.session_state.processed_sentences[s_idx] = reprocessed
-            st.rerun()
-            
-        elif action == "rewrite_sentence":
-            s_idx = component_value["sentence_idx"]
-            old_text = component_value["text"]
-            
-            # Riscrivi con Mistral
-            new_text = rewrite_with_mistral(old_text)
-            
-            # Processa e rimpiazza in-place
-            original_text = st.session_state.processed_sentences[s_idx].get("original_text", old_text)
-            reprocessed = process_sentence(new_text)
-            reprocessed["original_text"] = original_text
-            st.session_state.processed_sentences[s_idx] = reprocessed
-            st.rerun()
+            if action == "get_synonyms":
+                s_idx = component_value["sentence_idx"]
+                w_idx = component_value["word_idx"]
+                word = component_value["word"]
+                
+                syns = get_offline_synonyms(word)
+                syns_scores = calculate_synonym_scores(st.session_state.processed_sentences[s_idx], w_idx, syns)
+                
+                st.session_state.synonyms_payload = {
+                    "s_idx": s_idx,
+                    "w_idx": w_idx,
+                    "syns_scores": syns_scores
+                }
+                st.rerun()
+                
+            elif action == "replace_word":
+                s_idx = component_value["sentence_idx"]
+                w_idx = component_value["word_idx"]
+                new_word = component_value["new_word"]
+                
+                s = st.session_state.processed_sentences[s_idx]
+                old_word = s["words"][w_idx]["word"]
+                new_text = s["text"].replace(old_word, new_word, 1)
+                
+                original_text = s.get("original_text", s["text"])
+                reprocessed = process_sentence(new_text)
+                reprocessed["original_text"] = original_text
+                st.session_state.processed_sentences[s_idx] = reprocessed
+                st.rerun()
+                
+            elif action == "rewrite_sentence":
+                s_idx = component_value["sentence_idx"]
+                old_text = component_value["text"]
+                
+                # Riscrivi con Mistral
+                new_text = rewrite_with_mistral(old_text)
+                
+                # Processa e rimpiazza in-place
+                original_text = st.session_state.processed_sentences[s_idx].get("original_text", old_text)
+                reprocessed = process_sentence(new_text)
+                reprocessed["original_text"] = original_text
+                st.session_state.processed_sentences[s_idx] = reprocessed
+                st.rerun()
 
     st.divider()
     
