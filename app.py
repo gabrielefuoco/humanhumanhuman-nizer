@@ -10,6 +10,8 @@ from nltk.corpus import wordnet as wn
 import streamlit.components.v1 as components
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import requests
+from mistralai import Mistral
+from latex_parser import mask_latex, unmask_latex
 
 # --- SETUP DI BASE ---
 st.set_page_config(layout="wide", page_title="AI Humanizer", page_icon="✨")
@@ -70,6 +72,7 @@ When given text to humanize:
 2. Rewrite, don't delete - Replace AI-isms with natural alternatives.
 3. Preserve meaning - Keep the core message intact.
 4. Match the voice - Fit the intended tone.
+5. PRESERVE PLACEHOLDERS - You MUST NOT modify, translate, or remove any placeholders in the format [MATH_n], [CITE_n], [CMD_n], etc. Keep them exactly as they are in the rewritten text.
 
 ## PERSONALITY AND SOUL
 - Have opinions. React to facts.
@@ -132,8 +135,36 @@ def calculate_burstiness(sentences_data):
 
 def process_sentence(sentence_text):
     """Calcola perplexity della frase e dei singoli token."""
+    qwen_text = sentence_text
+    is_latex = st.session_state.get("is_latex", False)
+    if is_latex:
+        for mask in st.session_state.latex_registry.keys():
+            qwen_text = qwen_text.replace(mask, "formula")
+            
+    clean_qwen = qwen_text.replace("formula", "").strip()
+    if is_latex and not clean_qwen:
+        words_data = []
+        for w in sentence_text.split():
+            word_str = w
+            is_mask = False
+            for mask, real_val in st.session_state.latex_registry.items():
+                if mask in word_str:
+                    word_str = word_str.replace(mask, real_val)
+                    is_mask = True
+            words_data.append({
+                "word": word_str,
+                "isLowPpl": False,
+                "isCliche": False,
+                "isMask": is_mask
+            })
+        return {
+            "text": sentence_text,
+            "words": words_data,
+            "isCritical": False
+        }
+
     words_data = []
-    encodings = tokenizer(sentence_text, return_tensors="pt", truncation=True, max_length=512)
+    encodings = tokenizer(qwen_text, return_tensors="pt", truncation=True, max_length=512)
     input_ids = encodings.input_ids[0]
     
     try:
@@ -176,10 +207,19 @@ def process_sentence(sentence_text):
     cliche_count = sum(1 for w in words_data if w["isCliche"])
     is_critical = (sentence_ppl < 20.0) or (cliche_count > 0)
     
+    if is_latex:
+        for w_dict in words_data:
+            for mask, real_val in st.session_state.latex_registry.items():
+                if mask in w_dict["word"]:
+                    w_dict["word"] = w_dict["word"].replace(mask, real_val)
+                    w_dict["isMask"] = True
+                    w_dict["isLowPpl"] = False
+                    w_dict["isCliche"] = False
+    
     return {
         "text": sentence_text,
-        "isCritical": is_critical,
-        "words": words_data
+        "words": words_data,
+        "isCritical": is_critical
     }
 
 def get_offline_synonyms(word):
@@ -278,6 +318,21 @@ if not st.session_state.processed_sentences and not st.session_state.to_process:
     
     if st.button("🔍 Avvia Analisi Streaming", use_container_width=True):
         if input_text:
+            is_latex = False
+            latex_registry = {}
+            raw_text_for_export = input_text
+            
+            if st.session_state.get("last_uploaded_file", "").endswith(".tex"):
+                is_latex = True
+                input_text, latex_registry = mask_latex(input_text)
+                raw_text_for_export = input_text # Salviamo il testo mascherato come base
+                
+            st.session_state.is_latex = is_latex
+            st.session_state.latex_registry = latex_registry
+            st.session_state.raw_text_for_export = raw_text_for_export
+            # Copia di backup per tracciare le modifiche fatte da Mistral durante l'export
+            st.session_state.original_sentences_map = {}
+
             st.session_state.to_process = split_into_sentences(input_text)
             st.session_state.processed_sentences = []
             st.rerun()
@@ -294,6 +349,7 @@ if len(st.session_state.to_process) > 0:
     # Processa UNA SOLA frase
     sentence_text = st.session_state.to_process.pop(0)
     s_data = process_sentence(sentence_text)
+    s_data["original_text"] = sentence_text
     st.session_state.processed_sentences.append(s_data)
     
     needs_rerun = True
@@ -347,12 +403,13 @@ if st.session_state.processed_sentences:
             w_idx = component_value["word_idx"]
             new_word = component_value["new_word"]
             
-            # Applica la modifica
-            st.session_state.processed_sentences[s_idx]["words"][w_idx]["word"] = new_word
+            s = st.session_state.processed_sentences[s_idx]
+            old_word = s["words"][w_idx]["word"]
+            new_text = s["text"].replace(old_word, new_word, 1)
             
-            # Ricalcolo istantaneo di quella singola frase
-            new_text = " ".join([w["word"] for w in st.session_state.processed_sentences[s_idx]["words"]])
+            original_text = s.get("original_text", s["text"])
             reprocessed = process_sentence(new_text)
+            reprocessed["original_text"] = original_text
             st.session_state.processed_sentences[s_idx] = reprocessed
             st.rerun()
             
@@ -364,7 +421,9 @@ if st.session_state.processed_sentences:
             new_text = rewrite_with_mistral(old_text)
             
             # Processa e rimpiazza in-place
+            original_text = st.session_state.processed_sentences[s_idx].get("original_text", old_text)
             reprocessed = process_sentence(new_text)
+            reprocessed["original_text"] = original_text
             st.session_state.processed_sentences[s_idx] = reprocessed
             st.rerun()
 
@@ -373,8 +432,19 @@ if st.session_state.processed_sentences:
     # Pulsanti di Export
     full_text = " ".join([s["text"] for s in st.session_state.processed_sentences])
     c_dl1, c_dl2, c_dl3 = st.columns(3)
+    
+    is_latex = st.session_state.get("is_latex", False)
+    
     with c_dl1:
-        st.download_button("⬇️ Scarica .TXT", data=full_text, file_name="riscrittura.txt", mime="text/plain", use_container_width=True)
+        if is_latex:
+            tex_text = st.session_state.raw_text_for_export
+            for s in st.session_state.processed_sentences:
+                if s.get("original_text") and s["original_text"] != s["text"]:
+                    tex_text = tex_text.replace(s["original_text"], s["text"])
+            tex_text = unmask_latex(tex_text, st.session_state.latex_registry)
+            st.download_button("⬇️ Scarica .TEX", data=tex_text, file_name="riscrittura.tex", mime="text/plain", use_container_width=True)
+        else:
+            st.download_button("⬇️ Scarica .TXT", data=full_text, file_name="riscrittura.txt", mime="text/plain", use_container_width=True)
     with c_dl2:
         docx_data = create_docx(full_text)
         st.download_button("⬇️ Scarica .DOCX", data=docx_data, file_name="riscrittura.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
