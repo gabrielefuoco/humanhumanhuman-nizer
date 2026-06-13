@@ -3,3 +3,4 @@ mistralai
 torch
 transformers
 nltk
+python-docx
