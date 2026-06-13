@@ -290,197 +290,63 @@ def rewrite_with_mistral(text, sentence_data=None):
 
 # --- FUNZIONI GRADIO ---
 
-import html
-
 def build_html(processed_sentences, synonyms_payload=None):
-    sentences_json = json.dumps(processed_sentences).replace("'", "\\'")
-    synonyms_json = json.dumps(synonyms_payload) if synonyms_payload else "null"
+    """Genera HTML statico puro — niente JavaScript, niente iframe."""
     
-    inner_html = f"""
-    <html>
-    <head>
+    css = """
     <style>
-      body {{ font-family: 'Inter', sans-serif; background-color: transparent; color: #f8fafc; padding: 20px; line-height: 1.9; font-size: 16px; margin: 0; overflow-y: auto; }}
-      .sentence {{
+      .hh-container { font-family: 'Inter', sans-serif; color: #f8fafc; padding: 10px; line-height: 1.9; font-size: 16px; }
+      .hh-sentence {
           position: relative; display: block; margin-bottom: 12px; padding: 16px 20px;
-          padding-right: 150px; background-color: rgba(255, 255, 255, 0.03);
-          border-radius: 8px; border-left: 4px solid #3b82f6; transition: background 0.2s, transform 0.1s;
-      }}
-      .sentence:hover {{ background-color: rgba(255, 255, 255, 0.05); }}
-      .sentence.critical {{ background-color: rgba(248, 113, 113, 0.05); border-left: 4px solid #ef4444; }}
-      .sentence.critical:hover {{ background-color: rgba(248, 113, 113, 0.1); }}
-      .sentence:hover .rewrite-btn {{ display: inline-block; }}
-      
-      .rewrite-btn {{
-          display: none; position: absolute; top: 16px; right: 16px; 
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white;
-          font-size: 12px; padding: 6px 12px; border-radius: 12px; cursor: pointer; 
-          box-shadow: 0 4px 10px rgba(0,0,0,0.5); white-space: nowrap; font-weight: bold; 
-          z-index: 100; user-select: none;
-      }}
-      .sentence.critical .rewrite-btn {{ background: linear-gradient(135deg, #ef4444, #f59e0b); }}
-      .rewrite-btn:hover {{ transform: translateY(-2px); filter: brightness(1.1); }}
-      
-      .metrics-badge {{
+          background-color: rgba(255, 255, 255, 0.03); border-radius: 8px;
+          border-left: 4px solid #3b82f6;
+      }
+      .hh-sentence.critical {
+          background-color: rgba(248, 113, 113, 0.05); border-left: 4px solid #ef4444;
+      }
+      .hh-word { display: inline; }
+      .hh-word.low-ppl { color: #f87171; font-weight: 600; }
+      .hh-word.cliche { color: #eab308; font-weight: 600; }
+      .hh-badge {
           font-size: 11px; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.2);
-          padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; user-select: none;
-      }}
-      .sentence.critical .metrics-badge {{ color: #f87171; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); }}
-  
-      .word {{ cursor: pointer; transition: color 0.2s; padding: 0 1px; display: inline-block; }}
-      .word.low-ppl {{ color: #f87171; font-weight: 600; }}
-      .word.cliche {{ color: #eab308; font-weight: 600; }}
-      .word:hover {{ background-color: rgba(255,255,255,0.1); border-radius: 3px; }}
-      
-      #context-menu {{
-        display: none; position: fixed; background: #1e293b; border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 9999; padding: 5px 0; min-width: 150px;
-      }}
-      .menu-item {{ padding: 8px 15px; cursor: pointer; color: #e2e8f0; font-size: 14px; }}
-      .menu-item:hover {{ background: #3b82f6; color: white; }}
-      .menu-item .score {{ float: right; font-size: 11px; color: #94a3b8; margin-left: 10px; }}
-      .menu-item:hover .score {{ color: #e0f2fe; }}
-      .loader {{ padding: 8px 15px; font-size: 12px; color: #94a3b8; font-style: italic; }}
+          padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle;
+      }
+      .hh-sentence.critical .hh-badge {
+          color: #f87171; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3);
+      }
     </style>
-    </head>
-    <body>
-    <div class="text-container" id="text-container"></div>
-    <div id="context-menu"></div>
-    
-    <script>
-      function sendToGradio(payload) {{
-          if (window.parent && window.parent.document) {{
-              const textbox = window.parent.document.querySelector('#action_payload textarea');
-              if(textbox) {{
-                  textbox.value = JSON.stringify(payload);
-                  textbox.dispatchEvent(new Event('input', {{ bubbles: true }}));
-              }}
-          }}
-      }}
-  
-      let currentSIdx = null;
-      let currentWIdx = null;
-      let sentencesData = {sentences_json};
-      let synonymsPayload = {synonyms_json};
-      
-      function renderText() {{
-          const container = document.getElementById("text-container");
-          container.innerHTML = "";
-          
-          sentencesData.forEach((s, sIdx) => {{
-              let sSpan = document.createElement("span");
-              sSpan.className = "sentence" + (s.isCritical ? " critical" : "");
-              
-              let btn = document.createElement("div");
-              btn.className = "rewrite-btn";
-              btn.textContent = s.isCritical ? "⚠️ Riscrivi frase AI" : "🪄 Riscrivi frase";
-              btn.onclick = (e) => {{
-                  e.stopPropagation();
-                  btn.textContent = "⏳ Riscrittura...";
-                  btn.style.pointerEvents = "none";
-                  sendToGradio({{ action: "rewrite_sentence", sentence_idx: sIdx, text: s.text }});
-              }};
-              sSpan.appendChild(btn);
-              
-              s.words.forEach((w, wIdx) => {{
-                  let wSpan = document.createElement("span");
-                  wSpan.textContent = w.word + " ";
-                  
-                  let classes = ["word"];
-                  if (w.isLowPpl) classes.push("low-ppl");
-                  if (w.isCliche) classes.push("cliche");
-                  wSpan.className = classes.join(" ");
-                  
-                  wSpan.addEventListener("contextmenu", (e) => {{
-                      if(w.isLowPpl || w.isCliche) {{
-                          e.preventDefault();
-                          e.stopPropagation();
-                          showContextMenu(e.clientX, e.clientY, sIdx, wIdx, w.word);
-                      }}
-                  }});
-                  sSpan.appendChild(wSpan);
-              }});
-              
-              if (s.ppl !== undefined && s.aiScore !== undefined) {{
-                  let badge = document.createElement("span");
-                  badge.className = "metrics-badge";
-                  badge.textContent = `AI: ${{s.aiScore}}% | PPL: ${{s.ppl}}`;
-                  sSpan.appendChild(badge);
-              }}
-              
-              container.appendChild(sSpan);
-          }});
-          
-          if(synonymsPayload) {{
-              if (currentSIdx === synonymsPayload.s_idx && currentWIdx === synonymsPayload.w_idx) {{
-                  renderSynonymsMenu(synonymsPayload.syns_scores);
-              }} else {{
-                  currentSIdx = synonymsPayload.s_idx;
-                  currentWIdx = synonymsPayload.w_idx;
-                  renderSynonymsMenu(synonymsPayload.syns_scores);
-              }}
-          }}
-          
-          // Auto-resize iframe height
-          if(window.frameElement) {{
-              window.frameElement.style.height = (document.body.scrollHeight + 100) + 'px';
-          }}
-      }}
-  
-      function showContextMenu(x, y, sIdx, wIdx, word) {{
-          const menu = document.getElementById("context-menu");
-          currentSIdx = sIdx;
-          currentWIdx = wIdx;
-          
-          menu.style.left = x + "px";
-          menu.style.top = y + "px";
-          menu.style.display = "block";
-          
-          if (!synonymsPayload || synonymsPayload.s_idx !== sIdx || synonymsPayload.w_idx !== wIdx) {{
-              menu.innerHTML = "<div class='loader'>Calcolo sinonimi in GPU...</div>";
-              sendToGradio({{ action: "get_synonyms", sentence_idx: sIdx, word_idx: wIdx, word: word }});
-          }} else {{
-              renderSynonymsMenu(synonymsPayload.syns_scores);
-          }}
-      }}
-  
-      function renderSynonymsMenu(syns) {{
-          const menu = document.getElementById("context-menu");
-          menu.innerHTML = "";
-          if (syns.length === 0) {{
-              menu.innerHTML = "<div class='loader'>Nessun sinonimo trovato</div>";
-              return;
-          }}
-          syns.forEach(syn => {{
-              let item = document.createElement("div");
-              item.className = "menu-item";
-              item.innerHTML = `${{syn.word}} <span class='score'>PPL: ${{syn.score.toFixed(1)}}</span>`;
-              item.onclick = () => {{
-                  menu.style.display = "none";
-                  sendToGradio({{ 
-                      action: "replace_word", 
-                      sentence_idx: currentSIdx, 
-                      word_idx: currentWIdx, 
-                      new_word: syn.word 
-                  }});
-              }};
-              menu.appendChild(item);
-          }});
-          menu.style.display = "block";
-      }}
-  
-      document.addEventListener("click", () => {{
-          document.getElementById("context-menu").style.display = "none";
-      }});
-      
-      renderText();
-    </script>
-    </body>
-    </html>
     """
     
-    escaped_html = html.escape(inner_html)
-    return f'<iframe srcdoc="{escaped_html}" width="100%" style="min-height: 800px; border: none; overflow: hidden;" scrolling="yes"></iframe>'
+    if not processed_sentences:
+        return css + '<div class="hh-container"><p style="color: #94a3b8;">Nessun risultato.</p></div>'
+    
+    parts = [css, '<div class="hh-container">']
+    
+    for s in processed_sentences:
+        cls = "hh-sentence critical" if s.get("isCritical") else "hh-sentence"
+        parts.append(f'<div class="{cls}">')
+        
+        for w in s.get("words", []):
+            word_text = w.get("word", "")
+            word_text = word_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            
+            classes = ["hh-word"]
+            if w.get("isLowPpl"):
+                classes.append("low-ppl")
+            if w.get("isCliche"):
+                classes.append("cliche")
+            cls_str = " ".join(classes)
+            parts.append(f'<span class="{cls_str}">{word_text} </span>')
+        
+        ppl = s.get("ppl")
+        ai_score = s.get("aiScore")
+        if ppl is not None and ai_score is not None:
+            parts.append(f'<span class="hh-badge">AI: {ai_score}% | PPL: {ppl}</span>')
+        
+        parts.append('</div>')
+    
+    parts.append('</div>')
+    return "".join(parts)
 
 def parse_input_text(file_obj, raw_text):
     text = ""
@@ -490,12 +356,10 @@ def parse_input_text(file_obj, raw_text):
     if file_obj is not None:
         if isinstance(file_obj, str):
             filepath = file_obj
-            filename = os.path.basename(filepath).lower()
-            content = open(filepath, "rb").read()
         else:
             filepath = file_obj.name
-            filename = os.path.basename(filepath).lower()
-            content = open(filepath, "rb").read()
+        filename = os.path.basename(filepath).lower()
+        content = open(filepath, "rb").read()
             
         if filename.endswith(".tex"):
             try:
@@ -519,26 +383,36 @@ def parse_input_text(file_obj, raw_text):
 
 @spaces.GPU(duration=120)
 def do_stream_all(file_obj, raw_text):
+    print("=" * 50)
+    print("[DEBUG] do_stream_all CHIAMATO")
+    print(f"[DEBUG] file_obj={file_obj}, raw_text length={len(raw_text) if raw_text else 0}")
     try:
         text, is_latex, latex_registry = parse_input_text(file_obj, raw_text)
+        print(f"[DEBUG] Testo estratto, lunghezza: {len(text)}")
         text = apply_algorithmic_rules(text)
         sentences = split_into_sentences(text)
+        print(f"[DEBUG] Frasi trovate: {len(sentences)}")
         
         if not sentences:
             return [], "<div style='color: red; padding: 20px;'>Nessun testo inserito o trovato.</div>", {}, False
             
         processed_sentences = []
         
-        for s in sentences:
+        for i, s in enumerate(sentences):
+            print(f"[DEBUG] Elaboro frase {i+1}/{len(sentences)}: {s[:50]}...")
             s_data = process_sentence(s, latex_registry, is_latex)
             processed_sentences.append(s_data)
-            
-        return processed_sentences, build_html(processed_sentences), latex_registry, is_latex
+        
+        result_html = build_html(processed_sentences)
+        print(f"[DEBUG] HTML generato, lunghezza: {len(result_html)}")
+        print("[DEBUG] COMPLETATO CON SUCCESSO")
+        return processed_sentences, result_html, latex_registry, is_latex
             
     except Exception as e:
         import traceback
         err = traceback.format_exc()
-        return [], f"<div style='color: red; padding: 20px;'><b>ERRORE DI SISTEMA:</b><br><pre>{err}</pre></div>", {}, False
+        print(f"[DEBUG] ERRORE: {err}")
+        return [], f"<div style='color: red; padding: 20px;'><b>ERRORE:</b><br><pre>{err}</pre></div>", {}, False
 
 @spaces.GPU(duration=60)
 def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
