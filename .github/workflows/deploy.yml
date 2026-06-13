@@ -52,4 +52,16 @@ jobs:
           git config http.version HTTP/1.1
 
           echo "Inviando codice e file multimediali LFS a Hugging Face..."
-          git -c protocol.version=0 push -f hf main || { echo "Force push to Hugging Face failed. Check HF_TOKEN and remote connectivity."; exit 1; }
+          max_retries=5
+          retry_delay=30
+          for i in $(seq 1 $max_retries); do
+            echo "Tentativo $i di $max_retries..."
+            if git -c protocol.version=0 push -f hf main; then
+              echo "Push completato con successo!"
+              exit 0
+            fi
+            echo "Push fallito. Attesa di $retry_delay secondi prima di riprovare (possibile errore 429 Too Many Requests)..."
+            sleep $retry_delay
+          done
+          echo "Impossibile completare il push dopo $max_retries tentativi. Controlla HF_TOKEN e la connettività remota."
+          exit 1
