@@ -543,4 +543,4 @@ with gr.Blocks(css=css, theme=gr.themes.Default(primary_hue="blue", neutral_hue=
     )
 
 if __name__ == "__main__":
-    app.launch()
+    app.launch(share=True)
