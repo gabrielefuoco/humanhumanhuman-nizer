@@ -542,16 +542,27 @@ def parse_input_text(file_obj, raw_text):
     return text, is_latex, latex_registry
 
 @spaces.GPU(duration=120)
-def do_stream(text, latex_reg, is_latex):
-    text = apply_algorithmic_rules(text)
-    sentences = split_into_sentences(text)
-    
-    processed_sentences = []
-    
-    for s in sentences:
-        s_data = process_sentence(s, latex_reg, is_latex)
-        processed_sentences.append(s_data)
-        yield processed_sentences, build_html(processed_sentences)
+def do_stream_all(file_obj, raw_text):
+    try:
+        text, is_latex, latex_registry = parse_input_text(file_obj, raw_text)
+        text = apply_algorithmic_rules(text)
+        sentences = split_into_sentences(text)
+        
+        if not sentences:
+            yield [], "<div style='color: red; padding: 20px;'>Nessun testo inserito o trovato.</div>", {}, False
+            return
+            
+        processed_sentences = []
+        
+        for s in sentences:
+            s_data = process_sentence(s, latex_registry, is_latex)
+            processed_sentences.append(s_data)
+            yield processed_sentences, build_html(processed_sentences), latex_registry, is_latex
+            
+    except Exception as e:
+        import traceback
+        err = traceback.format_exc()
+        yield [], f"<div style='color: red; padding: 20px;'><b>ERRORE DI SISTEMA:</b><br><pre>{err}</pre></div>", {}, False
 
 @spaces.GPU(duration=60)
 def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
@@ -607,8 +618,9 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
             return processed_sentences, build_html(processed_sentences), ""
             
     except Exception as e:
-        print(f"Action error: {e}")
-        return processed_sentences, build_html(processed_sentences), ""
+        import traceback
+        err = traceback.format_exc()
+        return processed_sentences, f"<div style='color: red;'><b>ERRORE:</b><pre>{err}</pre></div>", ""
         
     return processed_sentences, build_html(processed_sentences), ""
 
@@ -661,20 +673,11 @@ with gr.Blocks(css=css, theme=gr.themes.Default(primary_hue="blue", neutral_hue=
             output_html = gr.HTML("<div style='color: #94a3b8; padding: 20px;'>L'analisi apparirà qui...</div>")
             
     action_payload = gr.Textbox(elem_id="action_payload")
-    text_state = gr.State("")
     
-    def on_analyze(file_obj, raw_text):
-        text, is_latex, latex_registry = parse_input_text(file_obj, raw_text)
-        return text, latex_registry, is_latex
-        
     analyze_btn.click(
-        fn=on_analyze,
+        fn=do_stream_all,
         inputs=[file_input, text_input],
-        outputs=[text_state, state_latex_reg, state_is_latex]
-    ).then(
-        fn=do_stream,
-        inputs=[text_state, state_latex_reg, state_is_latex],
-        outputs=[state_sentences, output_html]
+        outputs=[state_sentences, output_html, state_latex_reg, state_is_latex]
     )
     
     action_payload.change(
