@@ -12,21 +12,32 @@
     }
     .sentence {
         position: relative;
-        display: inline;
-        border-radius: 4px;
-        transition: background 0.2s;
+        display: block;
+        margin-bottom: 12px;
+        padding: 16px 20px;
+        padding-right: 150px;
+        background-color: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        border-left: 4px solid #3b82f6;
+        transition: background 0.2s, transform 0.1s;
+    }
+    .sentence:hover {
+        background-color: rgba(255, 255, 255, 0.05);
     }
     .sentence.critical {
+        background-color: rgba(248, 113, 113, 0.05);
+        border-left: 4px solid #ef4444;
+    }
+    .sentence.critical:hover {
         background-color: rgba(248, 113, 113, 0.1);
-        border-bottom: 1px dashed rgba(248, 113, 113, 0.5);
     }
     .sentence:hover .rewrite-btn { display: inline-block; }
     
     .rewrite-btn {
         display: none; 
         position: absolute; 
-        top: -35px; 
-        left: 0; 
+        top: 16px; 
+        right: 16px; 
         background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
         color: white;
         font-size: 12px; 
@@ -175,7 +186,6 @@
                 sSpan.appendChild(badge);
             }
             
-            sSpan.appendChild(document.createTextNode(" "));
             container.appendChild(sSpan);
         });
         Streamlit.setFrameHeight();
