@@ -38,6 +38,8 @@ MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY", "")
 # --- INIZIALIZZAZIONE MODELLO (CARICATO SU CUDA A LIVELLO GLOBALE PER ZEROGPU) ---
 model_id = "Qwen/Qwen3.5-0.8B"
 tokenizer = AutoTokenizer.from_pretrained(model_id)
+if tokenizer.pad_token is None:
+    tokenizer.pad_token = tokenizer.eos_token
 
 try:
     # Cerchiamo di allocarlo su CUDA. In locale potrebbe fallire se non c'è GPU, ma su ZeroGPU c'è sempre.
@@ -231,21 +233,51 @@ def get_offline_synonyms(word, context_sentence=""):
 
 def calculate_synonym_scores(sentence_data, word_idx, synonyms):
     results = []
+    if not synonyms:
+        return results
+        
     left_context = " ".join([w["word"] for w in sentence_data["words"][:word_idx]])
     right_context = " ".join([w["word"] for w in sentence_data["words"][word_idx+1:]])
     
+    texts = []
     for syn in synonyms:
         new_text = f"{left_context} {syn} {right_context}".strip()
-        encodings = tokenizer(new_text, return_tensors="pt", truncation=True, max_length=512)
-        try:
-            with torch.no_grad():
-                ids = encodings.input_ids.to(model.device)
-                outputs = model(ids, labels=ids)
-            score = math.exp(outputs.loss.item())
-        except:
-            score = 1000.0
-        results.append({"word": syn, "score": score})
+        texts.append(new_text)
         
+    encodings = tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=512)
+    
+    try:
+        with torch.no_grad():
+            ids = encodings.input_ids.to(model.device)
+            attention_mask = encodings.attention_mask.to(model.device)
+            outputs = model(ids, attention_mask=attention_mask, labels=ids)
+            
+            logits = outputs.logits
+            shift_logits = logits[..., :-1, :].contiguous()
+            shift_labels = ids[..., 1:].contiguous()
+            shift_mask = attention_mask[..., 1:].contiguous()
+            
+            loss_fct = torch.nn.CrossEntropyLoss(reduction='none')
+            loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+            loss = loss.view(shift_labels.size())
+            
+            loss = loss * shift_mask
+            seq_lengths = shift_mask.sum(dim=1)
+            seq_lengths = torch.clamp(seq_lengths, min=1)
+            seq_losses = loss.sum(dim=1) / seq_lengths
+            
+            for i, syn in enumerate(synonyms):
+                try:
+                    score = math.exp(seq_losses[i].item())
+                except OverflowError:
+                    score = 1000.0
+                results.append({"word": syn, "score": score})
+    except Exception as e:
+        print(f"[DEBUG] Errore nel calcolo batched dei sinonimi: {e}")
+        # Fallback in caso di errore
+        for syn in synonyms:
+            results.append({"word": syn, "score": 1000.0})
+            
     results.sort(key=lambda x: x["score"], reverse=True)
     return results
 
@@ -668,17 +700,24 @@ with gr.Blocks(css=css, theme=gr.themes.Default(primary_hue="blue", neutral_hue=
             
     action_payload = gr.Textbox(elem_id="action_payload")
     
-    # Script di comunicazione parent-iframe per Gradio
-    gr.HTML("""
-    <script>
+    # Script di comunicazione parent-iframe per Gradio registrato tramite app.load per assicurarne l'esecuzione
+    app.load(None, None, None, js="""
+    () => {
       window.addEventListener("message", (event) => {
           if (!event.data) return;
           
           if (event.data.type === "gradio_action") {
               const textbox = document.querySelector('#action_payload textarea') || document.querySelector('#action_payload input');
               if (textbox) {
-                  textbox.value = JSON.stringify(event.data.payload);
+                  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set
+                      || Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+                  if (nativeInputValueSetter) {
+                      nativeInputValueSetter.call(textbox, JSON.stringify(event.data.payload));
+                  } else {
+                      textbox.value = JSON.stringify(event.data.payload);
+                  }
                   textbox.dispatchEvent(new Event('input', { bubbles: true }));
+                  textbox.dispatchEvent(new Event('change', { bubbles: true }));
               }
           } else if (event.data.type === "resize_iframe") {
               const iframe = document.querySelector('#output_html iframe');
@@ -687,7 +726,7 @@ with gr.Blocks(css=css, theme=gr.themes.Default(primary_hue="blue", neutral_hue=
               }
           }
       });
-    </script>
+    }
     """)
     
     analyze_btn.click(
