@@ -10,7 +10,7 @@ from docx import Document
 from nltk.corpus import wordnet as wn
 import streamlit.components.v1 as components
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from mistralai import Mistral
+import requests
 
 # --- SETUP DI BASE ---
 st.set_page_config(layout="wide", page_title="AI Humanizer", page_icon="✨")
@@ -208,16 +208,24 @@ def calculate_synonym_scores(words_data, word_idx, synonyms):
 def rewrite_with_mistral(text):
     if not MISTRAL_API_KEY:
         return "Errore: MISTRAL_API_KEY non trovata nei Secrets."
-    client = Mistral(api_key=MISTRAL_API_KEY)
+    
+    url = "https://api.mistral.ai/v1/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": f"Bearer {MISTRAL_API_KEY}"
+    }
+    data = {
+        "model": "mistral-small-latest",
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT_HUMANIZER},
+            {"role": "user", "content": f"Riscrivi il seguente testo secondo le linee guida anti-AI. Testo:\n\n{text}"}
+        ]
+    }
     try:
-        response = client.chat.complete(
-            model="mistral-small-latest",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT_HUMANIZER},
-                {"role": "user", "content": f"Riscrivi il seguente testo secondo le linee guida anti-AI. Testo:\n\n{text}"}
-            ]
-        )
-        raw_output = response.choices[0].message.content
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        raw_output = response.json()["choices"][0]["message"]["content"]
         # Applica le regole matematiche (Hard Rules)
         return apply_algorithmic_rules(raw_output)
     except Exception as e:
