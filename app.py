@@ -182,10 +182,16 @@ def process_sentence(sentence_text):
     words = sentence_text.split()
     token_idx = 0
     for w in words:
-        word_loss = 10.0
-        if token_idx < len(losses):
-            word_loss = losses[token_idx]
-            token_idx += 1 
+        w_tokens = tokenizer(w, add_special_tokens=False).input_ids
+        num_tokens = max(1, len(w_tokens))
+        
+        w_losses = []
+        for _ in range(num_tokens):
+            if token_idx < len(losses):
+                w_losses.append(losses[token_idx])
+                token_idx += 1
+                
+        word_loss = sum(w_losses) / len(w_losses) if w_losses else 10.0
             
         try:
             ppl = math.exp(word_loss)
@@ -202,9 +208,12 @@ def process_sentence(sentence_text):
             "isCliche": is_cliche
         })
         
-    sentence_ppl = math.exp(avg_loss) if avg_loss < 100 else 1000.0
+    sentence_ppl = round(math.exp(avg_loss) if avg_loss < 100 else 1000.0, 1)
     cliche_count = sum(1 for w in words_data if w["isCliche"])
-    is_critical = (sentence_ppl < 20.0) or (cliche_count > 0)
+    is_critical = (sentence_ppl < 30.0) or (cliche_count > 0)
+    
+    # Calcolo approssimativo di AI Detection Score (0-100%)
+    ai_score = round(max(0, min(100, 100 - (sentence_ppl * 2) + (cliche_count * 10))))
     
     if is_latex:
         for w_dict in words_data:
@@ -218,7 +227,9 @@ def process_sentence(sentence_text):
     return {
         "text": sentence_text,
         "words": words_data,
-        "isCritical": is_critical
+        "isCritical": is_critical,
+        "ppl": sentence_ppl,
+        "aiScore": ai_score
     }
 
 def get_offline_synonyms(word):

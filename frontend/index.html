@@ -25,12 +25,12 @@
     .rewrite-btn {
         display: none; 
         position: absolute; 
-        top: -30px; 
+        top: -35px; 
         left: 0; 
         background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
         color: white;
         font-size: 12px; 
-        padding: 4px 10px; 
+        padding: 6px 12px; 
         border-radius: 12px; 
         cursor: pointer; 
         box-shadow: 0 4px 10px rgba(0,0,0,0.5);
@@ -39,7 +39,24 @@
         z-index: 100;
         user-select: none;
     }
-    .rewrite-btn:hover { transform: translateY(-2px); }
+    .sentence.critical .rewrite-btn { background: linear-gradient(135deg, #ef4444, #f59e0b); }
+    .rewrite-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+    
+    .metrics-badge {
+        font-size: 11px;
+        color: rgba(255,255,255,0.5);
+        background: rgba(0,0,0,0.2);
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 6px;
+        vertical-align: middle;
+        user-select: none;
+    }
+    .sentence.critical .metrics-badge {
+        color: #f87171;
+        background: rgba(248, 113, 113, 0.1);
+        border: 1px solid rgba(248, 113, 113, 0.3);
+    }
 
     .word { cursor: pointer; transition: color 0.2s; padding: 0 1px; }
     .word.low-ppl { 
@@ -120,18 +137,17 @@
             sSpan.className = "sentence" + (s.isCritical ? " critical" : "");
             sSpan.dataset.idx = sIdx;
             
-            if (s.isCritical) {
-                let btn = document.createElement("div");
-                btn.className = "rewrite-btn";
-                btn.textContent = "🪄 Riscrivi frase";
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    Streamlit.setComponentValue({ action: "rewrite_sentence", sentence_idx: sIdx, text: s.text });
-                    btn.textContent = "⏳ Riscrittura...";
-                    btn.style.pointerEvents = "none";
-                };
-                sSpan.appendChild(btn);
-            }
+            // Il pulsante di riscrittura è disponibile per TUTTE le frasi
+            let btn = document.createElement("div");
+            btn.className = "rewrite-btn";
+            btn.textContent = s.isCritical ? "⚠️ Riscrivi frase AI" : "🪄 Riscrivi frase";
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                Streamlit.setComponentValue({ action: "rewrite_sentence", sentence_idx: sIdx, text: s.text });
+                btn.textContent = "⏳ Riscrittura in corso...";
+                btn.style.pointerEvents = "none";
+            };
+            sSpan.appendChild(btn);
             
             s.words.forEach((w, wIdx) => {
                 let wSpan = document.createElement("span");
@@ -151,8 +167,16 @@
                 sSpan.appendChild(wSpan);
             });
             
+            // Aggiungiamo i punteggi di AI Detection
+            if (s.ppl !== undefined && s.aiScore !== undefined) {
+                let badge = document.createElement("span");
+                badge.className = "metrics-badge";
+                badge.textContent = `AI: ${s.aiScore}% | PPL: ${s.ppl}`;
+                sSpan.appendChild(badge);
+            }
+            
+            sSpan.appendChild(document.createTextNode(" "));
             container.appendChild(sSpan);
-            container.appendChild(document.createTextNode(" ")); // space between sentences
         });
         Streamlit.setFrameHeight();
     }
