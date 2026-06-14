@@ -755,10 +755,10 @@ def custom_launch(*args, **kwargs):
     try:
         from google.colab import output
         print("\n" + "="*60)
-        print("🌟 CLICCA SUL LINK SOTTOSTANTE PER APRIRE L'APP A SCHERMO INTERO 🌟")
-        colab_url = output.eval_js("google.colab.kernel.proxyPort(7860)", ignore_result=False)
-        print(colab_url)
+        print("🌟 STO APRENDO L'APP IN UNA NUOVA SCHEDA... 🌟")
+        print("Se non si apre, assicurati che il browser consenta i popup da Colab.")
         print("="*60 + "\n")
+        output.serve_kernel_port_as_window(7860)
     except Exception as e:
         print(f"Errore URL: {e}")
         
