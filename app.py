@@ -746,15 +746,34 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
         outputs=[export_btn]
     )
 
-if __name__ == "__main__":
+original_launch = app.launch
+
+def custom_launch(*args, **kwargs):
+    kwargs["inline"] = False
+    kwargs["server_port"] = 7860
+    
     try:
         from google.colab import output
-        colab_url = output.eval_js("google.colab.kernel.proxyPort(7860)")
-        print("\n" + "="*60)
-        print("🌟 CLICCA SUL LINK SOTTOSTANTE PER APRIRE L'APP A SCHERMO INTERO 🌟")
-        print(colab_url)
-        print("="*60 + "\n")
+        # Print the proxy port URL before launching
+        import threading
+        import time
+        def print_url():
+            time.sleep(2)
+            try:
+                colab_url = output.eval_js("google.colab.kernel.proxyPort(7860)")
+                print("\n" + "="*60)
+                print("🌟 CLICCA SUL LINK SOTTOSTANTE PER APRIRE L'APP A SCHERMO INTERO 🌟")
+                print(colab_url)
+                print("="*60 + "\n")
+            except:
+                pass
+        threading.Thread(target=print_url, daemon=True).start()
     except Exception:
         pass
         
-    app.launch(inline=False, server_port=7860)
+    return original_launch(*args, **kwargs)
+
+app.launch = custom_launch
+
+if __name__ == "__main__":
+    app.launch()
