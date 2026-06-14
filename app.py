@@ -754,22 +754,13 @@ def custom_launch(*args, **kwargs):
     
     try:
         from google.colab import output
-        # Print the proxy port URL before launching
-        import threading
-        import time
-        def print_url():
-            time.sleep(2)
-            try:
-                colab_url = output.eval_js("google.colab.kernel.proxyPort(7860)")
-                print("\n" + "="*60)
-                print("🌟 CLICCA SUL LINK SOTTOSTANTE PER APRIRE L'APP A SCHERMO INTERO 🌟")
-                print(colab_url)
-                print("="*60 + "\n")
-            except:
-                pass
-        threading.Thread(target=print_url, daemon=True).start()
-    except Exception:
-        pass
+        print("\n" + "="*60)
+        print("🌟 CLICCA SUL LINK SOTTOSTANTE PER APRIRE L'APP A SCHERMO INTERO 🌟")
+        colab_url = output.eval_js("google.colab.kernel.proxyPort(7860)", ignore_result=False)
+        print(colab_url)
+        print("="*60 + "\n")
+    except Exception as e:
+        print(f"Errore URL: {e}")
         
     return original_launch(*args, **kwargs)
 
