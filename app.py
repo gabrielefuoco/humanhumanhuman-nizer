@@ -746,13 +746,5 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
         outputs=[export_btn]
     )
 
-original_launch = app.launch
-def custom_launch(*args, **kwargs):
-    kwargs["share"] = True
-    kwargs["inline"] = False
-    kwargs["inbrowser"] = True
-    return original_launch(*args, **kwargs)
-app.launch = custom_launch
-
 if __name__ == "__main__":
     app.launch()
