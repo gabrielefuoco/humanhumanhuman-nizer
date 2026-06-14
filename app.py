@@ -747,4 +747,14 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
     )
 
 if __name__ == "__main__":
-    app.launch()
+    try:
+        from google.colab import output
+        colab_url = output.eval_js("google.colab.kernel.proxyPort(7860)")
+        print("\n" + "="*60)
+        print("🌟 CLICCA SUL LINK SOTTOSTANTE PER APRIRE L'APP A SCHERMO INTERO 🌟")
+        print(colab_url)
+        print("="*60 + "\n")
+    except Exception:
+        pass
+        
+    app.launch(inline=False, server_port=7860)
