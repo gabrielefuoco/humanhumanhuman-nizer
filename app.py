@@ -559,7 +559,8 @@ def do_stream_all(file_obj, raw_text):
         print(f"[DEBUG] Frasi trovate: {len(sentences)}")
         
         if not sentences:
-            return [], "<div style='color: red; padding: 20px;'>Nessun testo inserito o trovato.</div>", {}, False
+            yield [], "<div style='color: red; padding: 20px;'>Nessun testo inserito o trovato.</div>", {}, False
+            return
             
         processed_sentences = []
         
@@ -567,17 +568,16 @@ def do_stream_all(file_obj, raw_text):
             print(f"[DEBUG] Elaboro frase {i+1}/{len(sentences)}: {s[:50]}...")
             s_data = process_sentence(s, latex_registry, is_latex)
             processed_sentences.append(s_data)
-        
-        result_html = build_html(processed_sentences)
-        print(f"[DEBUG] HTML generato, lunghezza: {len(result_html)}")
+            yield processed_sentences, build_html(processed_sentences), latex_registry, is_latex
+            
         print("[DEBUG] COMPLETATO CON SUCCESSO")
-        return processed_sentences, result_html, latex_registry, is_latex
             
     except Exception as e:
         import traceback
         err = traceback.format_exc()
         print(f"[DEBUG] ERRORE: {err}")
-        return [], f"<div style='color: red; padding: 20px;'><b>ERRORE:</b><br><pre>{err}</pre></div>", {}, False
+        yield [], f"<div style='color: red; padding: 20px;'><b>ERRORE:</b><br><pre>{err}</pre></div>", {}, False
+        return
 
 @spaces.GPU(duration=60)
 def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
@@ -747,4 +747,4 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
     )
 
 if __name__ == "__main__":
-    app.launch(share=True)
+    app.launch(share=True, inline=False, inbrowser=True)
