@@ -43,7 +43,7 @@ def mask_latex(text: str):
     # $...$ but not $$...$$
     text = re.sub(r'(?<!\\)\$(?!\$).*?(?<!\\)\$', lambda m: replace_with_mask(m, "MATH"), text, flags=re.DOTALL)
     # \(...\)
-    text = re.sub(r'\\\([^)]*?\\\)', lambda m: replace_with_mask(m, "MATH"), text, flags=re.DOTALL)
+    text = re.sub(r'\\\(.*?\\\)', lambda m: replace_with_mask(m, "MATH"), text, flags=re.DOTALL)
     
     # 4. Citations & Refs
     text = re.sub(r'\\(?:cite|ref|eqref|label|pageref)\{.*?\}', lambda m: replace_with_mask(m, "CITE"), text)
@@ -53,11 +53,16 @@ def mask_latex(text: str):
     text = re.sub(r'\\end\{.*?\}', lambda m: replace_with_mask(m, "CMD"), text)
     text = re.sub(r'\\(?:section|subsection|chapter|item|title|author|date|maketitle|tableofcontents)(\*?)(\[.*?\])?\{.*?\}', lambda m: replace_with_mask(m, "CMD"), text)
     
-    # 6. Formatting commands (mascheriamo per mostrare a Mistral solo maschere pulite al posto di comandi complessi)
-    text = re.sub(r'\\(?:textbf|textit|emph|underline|textsc|mathrm|mathbf|text)\{[^{}]*\}', lambda m: replace_with_mask(m, "CMD"), text)
+    # Comandi di spaziatura e box con parametri complessi (es. \vspace*{0.4cm}, \makebox[0pt][c]{...})
+    text = re.sub(r'\\(?:vspace|hspace|makebox|parbox|rule|setlength|setcounter|addtolength)(\*?)(?:\[.*?\])*(?:\{.*?\})*', lambda m: replace_with_mask(m, "CMD"), text)
+    
+    # 6. Formatting commands
+    text = re.sub(r'\\(?:textbf|textit|emph|underline|textsc|mathrm|mathbf|text|fontsize)\{[^{}]*\}', lambda m: replace_with_mask(m, "CMD"), text)
+    
+    # Comandi senza parametri (es. \large, \rmfamily, \selectfont, \par, \noindent)
+    text = re.sub(r'\\(?:large|Large|LARGE|huge|Huge|small|footnotesize|scriptsize|tiny|rmfamily|sffamily|ttfamily|mdseries|bfseries|upshape|itshape|slshape|scshape|selectfont|par|noindent|centering|twocolumn|onecolumn)\b', lambda m: replace_with_mask(m, "CMD"), text)
     
     # 7. Altri comandi generici comuni e macro che non sono testo
-    # La regex per macro senza argomenti (es. \alpha, \noindent)
     text = re.sub(r'\\[a-zA-Z]+\b(?![a-zA-Z\{])', lambda m: replace_with_mask(m, "CMD"), text)
 
     return text, registry
