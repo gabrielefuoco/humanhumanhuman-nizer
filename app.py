@@ -594,7 +594,7 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
     print(f"[DEBUG] handle_ui_action CHIAMATO con payload: {payload_str}")
     if not payload_str:
         print("[DEBUG] Payload vuoto, ritorno default")
-        return processed_sentences, build_html(processed_sentences), payload_str
+        return gr.update(), gr.update(), gr.update()
         
     try:
         action_data = json.loads(payload_str)
