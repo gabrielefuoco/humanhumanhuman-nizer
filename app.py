@@ -746,25 +746,5 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
         outputs=[export_btn]
     )
 
-original_launch = app.launch
-
-def custom_launch(*args, **kwargs):
-    kwargs["inline"] = False
-    kwargs["server_port"] = 7860
-    
-    try:
-        from google.colab import output
-        print("\n" + "="*60)
-        print("🌟 STO APRENDO L'APP IN UNA NUOVA SCHEDA... 🌟")
-        print("Se non si apre, assicurati che il browser consenta i popup da Colab.")
-        print("="*60 + "\n")
-        output.serve_kernel_port_as_window(7860)
-    except Exception as e:
-        print(f"Errore URL: {e}")
-        
-    return original_launch(*args, **kwargs)
-
-app.launch = custom_launch
-
 if __name__ == "__main__":
-    app.launch()
+    app.launch(share=True, server_name="0.0.0.0", server_port=7860)
