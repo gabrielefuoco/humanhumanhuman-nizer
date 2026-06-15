@@ -331,22 +331,43 @@ def rewrite_with_mistral(text, sentence_data=None, temperature=0.7):
 
 # --- FUNZIONI GRADIO ---
 
-def build_html(processed_sentences, synonyms_payload=None):
+def build_html(processed_sentences, valid_sentences=None, synonyms_payload=None):
     import html
+    import json
+    
+    global_ai_score = 0
+    if processed_sentences:
+        global_ai_score = sum(s["aiScore"] for s in processed_sentences) / len(processed_sentences)
+        
+    total_sentences = len(valid_sentences) if valid_sentences else len(processed_sentences)
+    progress_pct = (len(processed_sentences) / total_sentences) * 100 if total_sentences > 0 else 100
+    
+    pending_texts = []
+    if valid_sentences and len(processed_sentences) < len(valid_sentences):
+        pending_texts = valid_sentences[len(processed_sentences):]
+
     sentences_json = json.dumps(processed_sentences).replace("'", "\\'")
     synonyms_json = json.dumps(synonyms_payload) if synonyms_payload else "null"
+    pending_json = json.dumps(pending_texts).replace("'", "\\'")
     
     inner_html = f"""
     <html>
     <head>
     <style>
       body {{ font-family: 'Inter', sans-serif; background-color: transparent; color: #f8fafc; padding: 20px; line-height: 1.9; font-size: 16px; margin: 0; overflow-y: auto; }}
-      .sentence {{
-          position: relative; display: block; margin-bottom: 12px; padding: 16px 20px;
-          padding-right: 150px; background-color: rgba(255, 255, 255, 0.03);
-          border-radius: 8px; border-left: 4px solid #3b82f6; transition: background 0.2s, transform 0.1s;
+      .progress-bar {{ background: #334155; height: 8px; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }}
+      .progress-fill {{ background: #3b82f6; height: 100%; transition: width 0.3s; }}
+      .sentence {{ 
+          display: block; padding: 12px 18px; margin-bottom: 12px; 
+          background: #1e293b; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);
+          transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+          position: relative; line-height: 1.6; color: #cbd5e1;
       }}
-      .sentence:hover {{ background-color: rgba(255, 255, 255, 0.05); }}
+      .sentence.pending {{
+          opacity: 0.4;
+          filter: grayscale(100%);
+          pointer-events: none;
+      }}
       .sentence.critical {{ background-color: rgba(248, 113, 113, 0.05); border-left: 4px solid #ef4444; }}
       .sentence.critical:hover {{ background-color: rgba(248, 113, 113, 0.1); }}
       .sentence:hover .rewrite-btn {{ display: inline-block; }}
@@ -385,6 +406,8 @@ def build_html(processed_sentences, synonyms_payload=None):
     </style>
     </head>
     <body>
+    <div class="progress-bar"><div class="progress-fill" style="width: {progress_pct}%"></div></div>
+    <div style="margin-bottom:10px; font-weight:bold;">Punteggio Globale AI: {int(global_ai_score)}%</div>
     <div class="text-container" id="text-container"></div>
     <div id="context-menu"></div>
     
@@ -400,6 +423,7 @@ def build_html(processed_sentences, synonyms_payload=None):
       let currentSIdx = null;
       let currentWIdx = null;
       let sentencesData = {sentences_json};
+      let pendingTexts = {pending_json};
       let synonymsPayload = {synonyms_json};
       
       function renderText() {{
@@ -464,6 +488,13 @@ def build_html(processed_sentences, synonyms_payload=None):
               }}
               
               container.appendChild(sSpan);
+          }});
+          
+          pendingTexts.forEach(text => {{
+              let pSpan = document.createElement("span");
+              pSpan.className = "sentence pending";
+              pSpan.textContent = text;
+              container.appendChild(pSpan);
           }});
           
           if(synonymsPayload) {{
@@ -589,26 +620,32 @@ def do_stream_all(file_obj, raw_text):
         print(f"[DEBUG] Frasi trovate: {len(sentences)}")
         
         if not sentences:
-            yield [], "<div style='color: red; padding: 20px;'>Nessun testo inserito o trovato.</div>", {}, False
+            yield [], "<div style='color: red; padding: 20px;'>Nessun testo inserito o trovato.</div>", {}, False, ""
             return
             
-        processed_sentences = []
-        
-        for i, s in enumerate(sentences):
-            # Se è LaTeX, verifichiamo se la frase contiene solo maschere e nessun testo reale
+        # Filtriamo prima le frasi valide per poter calcolare il totale e mostrare le frasi "pending"
+        valid_sentences = []
+        for s in sentences:
             if is_latex and latex_registry:
                 clean_s = s
                 for mask in latex_registry.keys():
                     clean_s = clean_s.replace(mask, "")
-                # Se non ci sono lettere, ignoriamo completamente il blocco (non lo passiamo all'AI né alla UI)
                 if not any(c.isalpha() for c in clean_s):
                     continue
-                    
-            print(f"[DEBUG] Elaboro frase {i+1}/{len(sentences)}: {s[:50]}...")
+            valid_sentences.append(s)
+            
+        if not valid_sentences:
+            yield [], "<div style='color: red; padding: 20px;'>Nessun testo valido trovato.</div>", {}, False, ""
+            return
+            
+        processed_sentences = []
+        
+        for i, s in enumerate(valid_sentences):
+            print(f"[DEBUG] Elaboro frase {i+1}/{len(valid_sentences)}: {s[:50]}...")
             s_data = process_sentence(s, latex_registry, is_latex)
             s_data["original_text"] = s
             processed_sentences.append(s_data)
-            yield processed_sentences, build_html(processed_sentences), latex_registry, is_latex, text
+            yield processed_sentences, build_html(processed_sentences, valid_sentences=valid_sentences), latex_registry, is_latex, text
             
         print("[DEBUG] COMPLETATO CON SUCCESSO")
             
