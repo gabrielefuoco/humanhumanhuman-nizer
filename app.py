@@ -441,13 +441,14 @@ def build_html(processed_sentences, synonyms_payload=None):
           }});
           
           if(synonymsPayload) {{
-              if (currentSIdx === synonymsPayload.s_idx && currentWIdx === synonymsPayload.w_idx) {{
-                  renderSynonymsMenu(synonymsPayload.syns_scores);
-              }} else {{
-                  currentSIdx = synonymsPayload.s_idx;
-                  currentWIdx = synonymsPayload.w_idx;
-                  renderSynonymsMenu(synonymsPayload.syns_scores);
+              currentSIdx = synonymsPayload.s_idx;
+              currentWIdx = synonymsPayload.w_idx;
+              const menu = document.getElementById("context-menu");
+              if (synonymsPayload.x !== undefined && synonymsPayload.y !== undefined) {{
+                  menu.style.left = synonymsPayload.x + "px";
+                  menu.style.top = synonymsPayload.y + "px";
               }}
+              renderSynonymsMenu(synonymsPayload.syns_scores);
           }}
           
           // Request resize after rendering
@@ -465,7 +466,7 @@ def build_html(processed_sentences, synonyms_payload=None):
           
           if (!synonymsPayload || synonymsPayload.s_idx !== sIdx || synonymsPayload.w_idx !== wIdx) {{
               menu.innerHTML = "<div class='loader'>Calcolo sinonimi in GPU...</div>";
-              sendToGradio({{ action: "get_synonyms", sentence_idx: sIdx, word_idx: wIdx, word: word }});
+              sendToGradio({{ action: "get_synonyms", sentence_idx: sIdx, word_idx: wIdx, word: word, x: x, y: y }});
           }} else {{
               renderSynonymsMenu(synonymsPayload.syns_scores);
           }}
@@ -599,6 +600,9 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
             print(f"[DEBUG] get_synonyms per parola '{word}' a frase {s_idx}, parola {w_idx}")
             context_sentence = processed_sentences[s_idx]["text"]
             
+            menu_x = action_data.get("x", 0)
+            menu_y = action_data.get("y", 0)
+            
             syns = get_offline_synonyms(word, context_sentence)
             print(f"[DEBUG] Sinonimi trovati: {syns}")
             syns_scores = calculate_synonym_scores(processed_sentences[s_idx], w_idx, syns)
@@ -607,7 +611,9 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
             synonyms_payload = {
                 "s_idx": s_idx,
                 "w_idx": w_idx,
-                "syns_scores": syns_scores
+                "syns_scores": syns_scores,
+                "x": menu_x,
+                "y": menu_y
             }
             return processed_sentences, build_html(processed_sentences, synonyms_payload=synonyms_payload), ""
             
