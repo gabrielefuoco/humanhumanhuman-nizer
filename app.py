@@ -293,7 +293,7 @@ def rewrite_with_mistral(text, sentence_data=None):
     if not MISTRAL_API_KEY:
         return text
     
-    prompt = f"Riscrivi la seguente frase problematica in modo che sembri 100% scritta da un essere umano. Testo:\n\n{text}"
+    prompt = f"Modifica minimamente la seguente frase sostituendo al massimo 1 o 2 parole con sinonimi perfetti per il contesto, mantenendo intatto tutto il resto. Testo originale:\n\n{text}"
     
     if sentence_data:
         suggestions = []
@@ -303,10 +303,10 @@ def rewrite_with_mistral(text, sentence_data=None):
                 if syns:
                     scores = calculate_synonym_scores(sentence_data, i, syns)
                     if scores:
-                        top_syns = ", ".join([f"{s['word']} (PPL: {round(s['score'], 1)})" for s in scores[:3]])
+                        top_syns = ", ".join([f"{s['word']}" for s in scores[:3]])
                         suggestions.append(f"- {w_dict['word']}: {top_syns}")
         if suggestions:
-            prompt += "\n\nPer aiutarti a bypassare i detector AI, ecco dei sinonimi ad altissima perplexity raccomandati per sostituire le parole incriminate. Cerca di usarli nel testo in modo naturale e grammaticalmente coerente:\n" + "\n".join(suggestions)
+            prompt += "\n\nEcco alcuni sinonimi raccomandati per le parole da sostituire. SCEGLINE AL MASSIMO UNO O DUE (i più naturali per il contesto) e usali al posto delle parole originali. IGNORA tutti gli altri suggerimenti e non stravolgere la frase:\n" + "\n".join(suggestions)
             
     url = "https://api.mistral.ai/v1/chat/completions"
     headers = {
