@@ -56,19 +56,17 @@ AI_CLICHES = [
 ]
 
 SYSTEM_PROMPT_HUMANIZER = """
-Sei un editor umano esperto nel riscrivere testi generati dall'AI per renderli al 100% indistinguibili dalla vera scrittura umana. 
-Il tuo unico scopo è riscrivere la frase o il paragrafo fornito abbassando drasticamente la sua prevedibilità matematica (aumentando la perplexity) e simulando l'imprevedibilità stilistica di un autore umano (burstiness).
+Sei un editor esperto. Il tuo compito è sostituire solo 1 o 2 parole nella frase per aggirare i detector AI.
 
 REGOLE FONDAMENTALI:
-1. EVITA IL LESSICO DA AI: Non usare MAI espressioni banali, pompose o tipiche dei modelli linguistici come "fondamentale", "cruciale", "complesso", "un quadro", "svolge un ruolo", "in sintesi", "è importante notare", "tuttavia", "inoltre".
-2. LESSICO IMPREVEDIBILE: Usa sinonimi meno ovvi e più vari. Se una parola è troppo comune, trovala una meno prevedibile ma altrettanto corretta.
-3. ALTERA LA SINTASSI: Evita la classica struttura "Soggetto + verbo + complemento". Inverti l'ordine delle parole, spezza le frasi lunghe in frasi più brevi, oppure usa incisi e virgole per spezzare il ritmo meccanico. Passa dalla forma passiva a quella attiva dove possibile.
-4. "SPORCA" LO STILE: La scrittura umana è leggermente asimmetrica e meno "perfetta" di quella dell'AI. Cerca un tono più diretto, meno enciclopedico e leggermente più discorsivo, mantenendo però la correttezza grammaticale.
-5. PRESERVA IL SIGNIFICATO: Non inventare fatti e non omettere informazioni chiave. Il senso originale deve rimanere identico.
-6. PRESERVA I SEGNAPOSTO (CRITICO): DEVI conservare intatti e nella giusta posizione tutti i placeholder come [MATH_n], [CITE_n], [CMD_n]. Non tradurli o modificarli per nessun motivo.
+1. FEDELTÀ ESTREMA: Non stravolgere o riscrivere l'intera frase. Mantieni la struttura, la punteggiatura e la lunghezza identiche all'originale.
+2. SOSTITUZIONE MINIMA: Cambia al massimo 1 o 2 parole (quelle che sembrano più prevedibili, banali o "cliché" da intelligenza artificiale) con sinonimi leggermente meno comuni ma perfettamente naturali per il contesto.
+3. MULTILINGUA: La frase può essere in Italiano o in Inglese. Mantieni SEMPRE la lingua originale della frase. Non tradurre per nessun motivo.
+4. PRESERVA IL SIGNIFICATO: Il senso originale della frase deve rimanere assolutamente identico.
+5. PRESERVA I SEGNAPOSTO: DEVI conservare intatti e nella giusta posizione tutti i placeholder come [MATH_n], [CITE_n], [CMD_n]. Non modificarli per nessun motivo.
 
 OUTPUT:
-Restituisci ESCLUSIVAMENTE la frase riscritta. Nessuna introduzione, nessuna spiegazione, nessuna virgoletta iniziale o finale.
+Restituisci ESCLUSIVAMENTE la frase modificata. Nessuna introduzione, nessuna spiegazione, nessuna virgoletta iniziale o finale.
 """
 
 def apply_algorithmic_rules(text):
@@ -205,7 +203,7 @@ def get_mistral_synonyms(word, context_sentence):
     data = {
         "model": "mistral-small-latest",
         "messages": [
-            {"role": "system", "content": "Sei un dizionario dei sinonimi. Restituisci SOLO una lista di 5 sinonimi per la parola richiesta, separati da virgola. Nessun'altra parola o punteggiatura extra."},
+            {"role": "system", "content": "Sei un dizionario dei sinonimi multilingua. Rileva la lingua della parola dal contesto e restituisci SOLO una lista di 5 sinonimi appropriati nella STESSA lingua. I sinonimi devono essere separati da virgola. Nessuna introduzione, nessuna spiegazione."},
             {"role": "user", "content": f"Fornisci 5 sinonimi per la parola '{word}' nel contesto di questa frase: '{context_sentence}'"}
         ]
     }
@@ -219,12 +217,22 @@ def get_mistral_synonyms(word, context_sentence):
 
 def get_offline_synonyms(word, context_sentence=""):
     clean_word = "".join(c for c in word if c.isalpha()).lower()
-    synsets = wn.synsets(clean_word, lang='ita')
     syns = set()
-    for syn in synsets:
+    
+    # Try English
+    synsets_eng = wn.synsets(clean_word, lang='eng')
+    for syn in synsets_eng:
+        for lemma in syn.lemma_names('eng'):
+            if lemma.lower() != clean_word:
+                syns.add(lemma.replace('_', ' '))
+                
+    # Try Italian
+    synsets_ita = wn.synsets(clean_word, lang='ita')
+    for syn in synsets_ita:
         for lemma in syn.lemma_names('ita'):
             if lemma.lower() != clean_word:
                 syns.add(lemma.replace('_', ' '))
+                
     syns_list = list(syns)[:5]
     if not syns_list and context_sentence:
         syns_list = get_mistral_synonyms(clean_word, context_sentence)
