@@ -74,7 +74,12 @@ def unmask_latex(text: str, registry: dict):
     if not registry:
         return text
         
-    # Sostituiamo in ordine inverso di lunghezza per evitare che [MATH_1] rimpiazzi parzialmente [MATH_10]
-    for mask in sorted(registry.keys(), key=len, reverse=True):
-        text = text.replace(mask, registry[mask])
+    changed = True
+    masks = sorted(registry.keys(), key=len, reverse=True)
+    while changed:
+        changed = False
+        for mask in masks:
+            if mask in text:
+                text = text.replace(mask, registry[mask])
+                changed = True
     return text
