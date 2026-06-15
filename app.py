@@ -178,9 +178,8 @@ def process_sentence(sentence_text, latex_registry, is_latex):
     
     if is_latex and latex_registry:
         for w_dict in words_data:
-            for mask, real_val in latex_registry.items():
+            for mask in latex_registry.keys():
                 if mask in w_dict["word"]:
-                    w_dict["word"] = w_dict["word"].replace(mask, real_val)
                     w_dict["isMask"] = True
                     w_dict["isLowPpl"] = False
                     w_dict["isCliche"] = False
@@ -371,6 +370,7 @@ def build_html(processed_sentences, synonyms_payload=None):
       .word {{ cursor: pointer; transition: color 0.2s; padding: 0 1px; display: inline-block; }}
       .word.low-ppl {{ color: #f87171; font-weight: 600; }}
       .word.cliche {{ color: #eab308; font-weight: 600; }}
+      .word.mask {{ background: #334155; color: #94a3b8; padding: 0 4px; border-radius: 4px; font-family: monospace; font-size: 0.85em; cursor: default; }}
       .word:hover {{ background-color: rgba(255,255,255,0.1); border-radius: 3px; }}
       
       #context-menu {{
@@ -443,6 +443,7 @@ def build_html(processed_sentences, synonyms_payload=None):
                   let classes = ["word"];
                   if (w.isLowPpl) classes.push("low-ppl");
                   if (w.isCliche) classes.push("cliche");
+                  if (w.isMask) classes.push("mask");
                   wSpan.className = classes.join(" ");
                   
                   wSpan.addEventListener("click", (e) => {{
