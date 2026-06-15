@@ -592,8 +592,9 @@ def do_stream_all(file_obj, raw_text):
         for i, s in enumerate(sentences):
             print(f"[DEBUG] Elaboro frase {i+1}/{len(sentences)}: {s[:50]}...")
             s_data = process_sentence(s, latex_registry, is_latex)
+            s_data["original_text"] = s
             processed_sentences.append(s_data)
-            yield processed_sentences, build_html(processed_sentences), latex_registry, is_latex
+            yield processed_sentences, build_html(processed_sentences), latex_registry, is_latex, text
             
         print("[DEBUG] COMPLETATO CON SUCCESSO")
             
@@ -601,7 +602,7 @@ def do_stream_all(file_obj, raw_text):
         import traceback
         err = traceback.format_exc()
         print(f"[DEBUG] ERRORE: {err}")
-        yield [], f"<div style='color: red; padding: 20px;'><b>ERRORE:</b><br><pre>{err}</pre></div>", {}, False
+        yield [], f"<div style='color: red; padding: 20px;'><b>ERRORE:</b><br><pre>{err}</pre></div>", {}, False, ""
         return
 
 @spaces.GPU(duration=60)
@@ -706,17 +707,18 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
         
     return processed_sentences, build_html(processed_sentences), ""
 
-def export_doc(processed_sentences, latex_reg, is_latex):
+def export_doc(processed_sentences, latex_reg, is_latex, original_text_masked):
     if not processed_sentences: return None
     
-    final_sentences = []
+    # Ricostruiamo il testo mantenendo gli spazi e ritorni a capo originali
+    final_text = original_text_masked
     for s in processed_sentences:
-        text = s["text"]
-        if is_latex and latex_reg:
-            text = unmask_latex(text, latex_reg)
-        final_sentences.append(text)
-        
-    final_text = " ".join(final_sentences)
+        if s.get("original_text") and s.get("original_text") != s.get("text"):
+            # Sostituiamo solo la prima occorrenza per evitare di sovrascrivere frasi identiche due volte
+            final_text = final_text.replace(s["original_text"], s["text"], 1)
+            
+    if is_latex and latex_reg:
+        final_text = unmask_latex(final_text, latex_reg)
     
     if is_latex:
         path = "/tmp/humanized.tex"
@@ -771,6 +773,7 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
     state_sentences = gr.State([])
     state_latex_reg = gr.State({})
     state_is_latex = gr.State(False)
+    state_original_text = gr.State("")
     
     with gr.Row():
         with gr.Column(scale=1):
@@ -787,7 +790,7 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
     analyze_btn.click(
         fn=do_stream_all,
         inputs=[file_input, text_input],
-        outputs=[state_sentences, output_html, state_latex_reg, state_is_latex]
+        outputs=[state_sentences, output_html, state_latex_reg, state_is_latex, state_original_text]
     )
     
     action_payload.change(
@@ -798,7 +801,7 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
     
     export_btn.click(
         fn=export_doc,
-        inputs=[state_sentences, state_latex_reg, state_is_latex],
+        inputs=[state_sentences, state_latex_reg, state_is_latex, state_original_text],
         outputs=[export_btn]
     )
 
