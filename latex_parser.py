@@ -16,6 +16,16 @@ def mask_latex(text: str):
         registry[mask_str] = match.group(0)
         return mask_str
 
+    # 0. Preamble (tutto fino a \begin{document})
+    doc_match = re.search(r'\\begin\{document\}', text)
+    if doc_match:
+        preamble = text[:doc_match.end()]
+        idx = mask_counter.setdefault("PREAMBLE", 0)
+        mask_counter["PREAMBLE"] += 1
+        mask_str = f"[PREAMBLE_{idx}]"
+        registry[mask_str] = preamble
+        text = mask_str + text[doc_match.end():]
+
     # 1. Block Math & Comments environments (multiline)
     # Match \begin{equation} ... \end{equation} and similar
     block_patterns = [

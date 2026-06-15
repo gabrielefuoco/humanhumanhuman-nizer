@@ -78,7 +78,8 @@ def apply_algorithmic_rules(text):
     return text
 
 def split_into_sentences(text):
-    sentences = re.split(r'(?<=[.!?])\s+', text)
+    # Separiamo per punteggiatura finale o per paragrafi (doppi a capo)
+    sentences = re.split(r'(?<=[.!?])\s+|\n\n+', text)
     return [s for s in sentences if s.strip()]
 
 def calculate_burstiness(sentences):
@@ -568,8 +569,9 @@ def parse_input_text(file_obj, raw_text):
                 text = content.decode("latin-1")
     elif raw_text:
         text = raw_text
-        
-    return text, is_latex, latex_registry
+        if r"\documentclass" in text or r"\begin{document}" in text:
+            text, latex_registry = mask_latex(text)
+            is_latex = True
 
 @spaces.GPU(duration=120)
 def do_stream_all(file_obj, raw_text):
@@ -590,6 +592,15 @@ def do_stream_all(file_obj, raw_text):
         processed_sentences = []
         
         for i, s in enumerate(sentences):
+            # Se è LaTeX, verifichiamo se la frase contiene solo maschere e nessun testo reale
+            if is_latex and latex_registry:
+                clean_s = s
+                for mask in latex_registry.keys():
+                    clean_s = clean_s.replace(mask, "")
+                # Se non ci sono lettere, ignoriamo completamente il blocco (non lo passiamo all'AI né alla UI)
+                if not any(c.isalpha() for c in clean_s):
+                    continue
+                    
             print(f"[DEBUG] Elaboro frase {i+1}/{len(sentences)}: {s[:50]}...")
             s_data = process_sentence(s, latex_registry, is_latex)
             s_data["original_text"] = s
