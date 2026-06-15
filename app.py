@@ -572,6 +572,8 @@ def parse_input_text(file_obj, raw_text):
         if r"\documentclass" in text or r"\begin{document}" in text:
             text, latex_registry = mask_latex(text)
             is_latex = True
+            
+    return text, is_latex, latex_registry
 
 @spaces.GPU(duration=120)
 def do_stream_all(file_obj, raw_text):
