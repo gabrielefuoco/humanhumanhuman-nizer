@@ -420,7 +420,7 @@ def build_html(processed_sentences, synonyms_payload=None):
                   if (w.isCliche) classes.push("cliche");
                   wSpan.className = classes.join(" ");
                   
-                  wSpan.addEventListener("contextmenu", (e) => {{
+                  wSpan.addEventListener("click", (e) => {{
                       if(w.isLowPpl || w.isCliche) {{
                           e.preventDefault();
                           e.stopPropagation();
