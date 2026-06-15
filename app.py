@@ -289,7 +289,7 @@ def calculate_synonym_scores(sentence_data, word_idx, synonyms):
     results.sort(key=lambda x: x["score"], reverse=True)
     return results
 
-def rewrite_with_mistral(text, sentence_data=None):
+def rewrite_with_mistral(text, sentence_data=None, temperature=0.7):
     if not MISTRAL_API_KEY:
         return text
     
@@ -316,6 +316,7 @@ def rewrite_with_mistral(text, sentence_data=None):
     }
     data = {
         "model": "mistral-small-latest",
+        "temperature": temperature,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT_HUMANIZER},
             {"role": "user", "content": prompt}
@@ -410,14 +411,29 @@ def build_html(processed_sentences, synonyms_payload=None):
               
               let btn = document.createElement("div");
               btn.className = "rewrite-btn";
-              btn.textContent = s.isCritical ? "⚠️ Riscrivi frase AI" : "🪄 Riscrivi frase";
+              btn.textContent = s.isCritical ? "⚠️ Riscrivi AI" : "🪄 Riscrivi AI";
               btn.onclick = (e) => {{
                   e.stopPropagation();
-                  btn.textContent = "⏳ Riscrittura...";
+                  btn.textContent = "⏳ Riscrittura in corso...";
                   btn.style.pointerEvents = "none";
                   sendToGradio({{ action: "rewrite_sentence", sentence_idx: sIdx, text: s.text }});
               }};
               sSpan.appendChild(btn);
+              
+              let btn_edit = document.createElement("div");
+              btn_edit.className = "rewrite-btn";
+              btn_edit.style.backgroundColor = "#475569";
+              btn_edit.textContent = "✏️ Modifica";
+              btn_edit.onclick = (e) => {{
+                  e.stopPropagation();
+                  let manualText = prompt("Modifica manualmente la frase:", s.text);
+                  if (manualText !== null && manualText.trim() !== "" && manualText !== s.text) {{
+                      btn_edit.textContent = "⏳ Calcolo...";
+                      btn_edit.style.pointerEvents = "none";
+                      sendToGradio({{ action: "manual_edit", sentence_idx: sIdx, text: manualText.trim() }});
+                  }}
+              }};
+              sSpan.appendChild(btn_edit);
               
               s.words.forEach((w, wIdx) => {{
                   let wSpan = document.createElement("span");
@@ -647,10 +663,36 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
             print(f"[DEBUG] rewrite_sentence a frase {s_idx}: '{old_text}'")
             
             s_data = processed_sentences[s_idx]
-            new_text = rewrite_with_mistral(old_text, sentence_data=s_data)
-            print(f"[DEBUG] Riscritto da Mistral: '{new_text}'")
+            original_text = s_data.get("original_text", old_text)
             
-            original_text = processed_sentences[s_idx].get("original_text", old_text)
+            best_reprocessed = None
+            # Loop fino a 3 volte cercando un punteggio AI < 30%
+            for attempt in range(3):
+                temp = 0.7 + (attempt * 0.2)
+                new_text = rewrite_with_mistral(old_text, sentence_data=s_data, temperature=temp)
+                print(f"[DEBUG] Tentativo {attempt+1} - Riscritto da Mistral: '{new_text}'")
+                
+                reprocessed = process_sentence(new_text, latex_reg, is_latex)
+                
+                if best_reprocessed is None or reprocessed["aiScore"] < best_reprocessed["aiScore"]:
+                    best_reprocessed = reprocessed
+                    
+                if best_reprocessed["aiScore"] <= 30:
+                    print(f"[DEBUG] Punteggio valido raggiunto ({best_reprocessed['aiScore']}%) al tentativo {attempt+1}")
+                    break
+            
+            best_reprocessed["original_text"] = original_text
+            processed_sentences[s_idx] = best_reprocessed
+            return processed_sentences, build_html(processed_sentences), ""
+            
+        elif action == "manual_edit":
+            s_idx = action_data["sentence_idx"]
+            new_text = action_data["text"]
+            print(f"[DEBUG] manual_edit a frase {s_idx}: '{new_text}'")
+            
+            s_data = processed_sentences[s_idx]
+            original_text = s_data.get("original_text", s_data["text"])
+            
             reprocessed = process_sentence(new_text, latex_reg, is_latex)
             reprocessed["original_text"] = original_text
             processed_sentences[s_idx] = reprocessed
