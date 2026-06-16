@@ -331,22 +331,38 @@ def rewrite_with_mistral(text, sentence_data=None, temperature=0.7):
 
 # --- FUNZIONI GRADIO ---
 
-def build_html(processed_sentences, valid_sentences=None, synonyms_payload=None):
+PAGE_SIZE = 20
+
+def build_html(processed_sentences, valid_sentences=None, synonyms_payload=None, current_page=1, page_size=PAGE_SIZE):
     import html
     import json
     
+    processed_count = sum(1 for s in processed_sentences if s is not None)
     global_ai_score = 0
-    if processed_sentences:
-        global_ai_score = sum(s["aiScore"] for s in processed_sentences) / len(processed_sentences)
+    if processed_count > 0:
+        global_ai_score = sum(s["aiScore"] for s in processed_sentences if s is not None) / processed_count
         
     total_sentences = len(valid_sentences) if valid_sentences else len(processed_sentences)
-    progress_pct = (len(processed_sentences) / total_sentences) * 100 if total_sentences > 0 else 100
+    progress_pct = (processed_count / total_sentences) * 100 if total_sentences > 0 else 100
     
+    start_idx = (current_page - 1) * page_size
+    end_idx = min(start_idx + page_size, total_sentences)
+    
+    page_sentences_data = []
     pending_texts = []
-    if valid_sentences and len(processed_sentences) < len(valid_sentences):
-        pending_texts = valid_sentences[len(processed_sentences):]
+    
+    if valid_sentences:
+        for i in range(start_idx, end_idx):
+            if processed_sentences[i] is not None:
+                page_sentences_data.append(processed_sentences[i])
+            else:
+                pending_texts.append(valid_sentences[i])
+    else:
+        for i in range(start_idx, min(start_idx + page_size, len(processed_sentences))):
+            if processed_sentences[i] is not None:
+                page_sentences_data.append(processed_sentences[i])
 
-    sentences_json = json.dumps(processed_sentences).replace("'", "\\'")
+    sentences_json = json.dumps(page_sentences_data).replace("'", "\\'")
     synonyms_json = json.dumps(synonyms_payload) if synonyms_payload else "null"
     pending_json = json.dumps(pending_texts).replace("'", "\\'")
     
@@ -407,7 +423,10 @@ def build_html(processed_sentences, valid_sentences=None, synonyms_payload=None)
     </head>
     <body>
     <div class="progress-bar"><div class="progress-fill" style="width: {progress_pct}%"></div></div>
-    <div style="margin-bottom:10px; font-weight:bold;">Punteggio Globale AI: {int(global_ai_score)}%</div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-weight: bold; color: #e2e8f0;">Punteggio Globale AI: {int(global_ai_score)}%</span>
+            <span style="color: #94a3b8; font-size: 12px;">{processed_count} / {total_sentences} frasi totali</span>
+        </div>
     <div class="text-container" id="text-container"></div>
     <div id="context-menu"></div>
     
@@ -425,6 +444,7 @@ def build_html(processed_sentences, valid_sentences=None, synonyms_payload=None)
       let sentencesData = {sentences_json};
       let pendingTexts = {pending_json};
       let synonymsPayload = {synonyms_json};
+      let pageStartIdx = {start_idx};
       
       function renderText() {{
           const container = document.getElementById("text-container");
@@ -441,7 +461,7 @@ def build_html(processed_sentences, valid_sentences=None, synonyms_payload=None)
                   e.stopPropagation();
                   btn.textContent = "⏳ Riscrittura in corso...";
                   btn.style.pointerEvents = "none";
-                  sendToGradio({{ action: "rewrite_sentence", sentence_idx: sIdx, text: s.text }});
+                  sendToGradio({{ action: "rewrite_sentence", sentence_idx: sIdx + pageStartIdx, text: s.text }});
               }};
               sSpan.appendChild(btn);
               
@@ -455,7 +475,7 @@ def build_html(processed_sentences, valid_sentences=None, synonyms_payload=None)
                   if (manualText !== null && manualText.trim() !== "" && manualText !== s.text) {{
                       btn_edit.textContent = "⏳ Calcolo...";
                       btn_edit.style.pointerEvents = "none";
-                      sendToGradio({{ action: "manual_edit", sentence_idx: sIdx, text: manualText.trim() }});
+                      sendToGradio({{ action: "manual_edit", sentence_idx: sIdx + pageStartIdx, text: manualText.trim() }});
                   }}
               }};
               sSpan.appendChild(btn_edit);
@@ -474,7 +494,7 @@ def build_html(processed_sentences, valid_sentences=None, synonyms_payload=None)
                       if(w.isLowPpl || w.isCliche) {{
                           e.preventDefault();
                           e.stopPropagation();
-                          showContextMenu(e.clientX, e.clientY, sIdx, wIdx, w.word);
+                          showContextMenu(e.clientX, e.clientY, sIdx + pageStartIdx, wIdx, w.word);
                       }}
                   }});
                   sSpan.appendChild(wSpan);
@@ -607,11 +627,9 @@ def parse_input_text(file_obj, raw_text):
             
     return text, is_latex, latex_registry
 
-@spaces.GPU(duration=120)
-def do_stream_all(file_obj, raw_text):
+def init_analysis(file_obj, raw_text):
     print("=" * 50)
-    print("[DEBUG] do_stream_all CHIAMATO")
-    print(f"[DEBUG] file_obj={file_obj}, raw_text length={len(raw_text) if raw_text else 0}")
+    print("[DEBUG] init_analysis CHIAMATO")
     try:
         text, is_latex, latex_registry = parse_input_text(file_obj, raw_text)
         print(f"[DEBUG] Testo estratto, lunghezza: {len(text)}")
@@ -619,11 +637,6 @@ def do_stream_all(file_obj, raw_text):
         sentences = split_into_sentences(text)
         print(f"[DEBUG] Frasi trovate: {len(sentences)}")
         
-        if not sentences:
-            yield [], "<div style='color: red; padding: 20px;'>Nessun testo inserito o trovato.</div>", {}, False, ""
-            return
-            
-        # Filtriamo prima le frasi valide per poter calcolare il totale e mostrare le frasi "pending"
         valid_sentences = []
         for s in sentences:
             if is_latex and latex_registry:
@@ -635,29 +648,47 @@ def do_stream_all(file_obj, raw_text):
             valid_sentences.append(s)
             
         if not valid_sentences:
-            yield [], "<div style='color: red; padding: 20px;'>Nessun testo valido trovato.</div>", {}, False, ""
-            return
+            return [], [], gr.update(visible=False), {}, False, "", "<div style='color: red; padding: 20px;'>Nessun testo valido trovato.</div>"
             
-        processed_sentences = []
+        processed_sentences = [None] * len(valid_sentences)
+        import math
+        total_pages = max(1, math.ceil(len(valid_sentences) / PAGE_SIZE))
         
-        for i, s in enumerate(valid_sentences):
-            print(f"[DEBUG] Elaboro frase {i+1}/{len(valid_sentences)}: {s[:50]}...")
-            s_data = process_sentence(s, latex_registry, is_latex)
-            s_data["original_text"] = s
-            processed_sentences.append(s_data)
-            yield processed_sentences, build_html(processed_sentences, valid_sentences=valid_sentences), latex_registry, is_latex, text
-            
-        print("[DEBUG] COMPLETATO CON SUCCESSO")
-            
+        return valid_sentences, processed_sentences, gr.update(maximum=total_pages, value=1, visible=True), latex_registry, is_latex, text, "<div style='color: #94a3b8; padding: 20px;'>Avvio analisi pagina 1...</div>"
+        
     except Exception as e:
         import traceback
         err = traceback.format_exc()
         print(f"[DEBUG] ERRORE: {err}")
-        yield [], f"<div style='color: red; padding: 20px;'><b>ERRORE:</b><br><pre>{err}</pre></div>", {}, False, ""
+        return [], [], gr.update(visible=False), {}, False, "", f"<div style='color: red; padding: 20px;'><b>ERRORE:</b><br><pre>{err}</pre></div>"
+
+@spaces.GPU(duration=120)
+def analyze_page(page_num, valid_sentences, processed_sentences, latex_registry, is_latex):
+    if not valid_sentences:
+        yield processed_sentences, "<div style='color: red;'>Nessun testo da analizzare.</div>"
         return
+        
+    page_num = max(1, int(page_num))
+    start_idx = (page_num - 1) * PAGE_SIZE
+    end_idx = min(start_idx + PAGE_SIZE, len(valid_sentences))
+    
+    html = build_html(processed_sentences, valid_sentences=valid_sentences, current_page=page_num, page_size=PAGE_SIZE)
+    yield processed_sentences, html
+    
+    for i in range(start_idx, end_idx):
+        if processed_sentences[i] is None:
+            s = valid_sentences[i]
+            print(f"[DEBUG] Elaboro frase {i+1}/{len(valid_sentences)}: {s[:50]}...")
+            s_data = process_sentence(s, latex_registry, is_latex)
+            s_data["original_text"] = s
+            processed_sentences[i] = s_data
+            
+            yield processed_sentences, build_html(processed_sentences, valid_sentences=valid_sentences, current_page=page_num, page_size=PAGE_SIZE)
+            
+    print("[DEBUG] PAGINA COMPLETATA CON SUCCESSO")
 
 @spaces.GPU(duration=60)
-def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
+def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, valid_sentences, current_page):
     print("=" * 50)
     print(f"[DEBUG] handle_ui_action CHIAMATO con payload: {payload_str}")
     if not payload_str:
@@ -679,10 +710,11 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
             menu_x = action_data.get("x", 0)
             menu_y = action_data.get("y", 0)
             
-            syns = get_offline_synonyms(word, context_sentence)
-            print(f"[DEBUG] Sinonimi trovati: {syns}")
-            syns_scores = calculate_synonym_scores(processed_sentences[s_idx], w_idx, syns)
-            print(f"[DEBUG] Punteggi calcolati: {syns_scores}")
+            syns = get_mistral_synonyms(word, context_sentence)
+            print(f"[DEBUG] Sinonimi da Mistral: {syns}")
+            
+            syns_scores = evaluate_synonyms(word, syns, context_sentence, is_latex, latex_reg)
+            print(f"[DEBUG] Score calcolati: {syns_scores}")
             
             synonyms_payload = {
                 "s_idx": s_idx,
@@ -691,7 +723,7 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
                 "x": menu_x,
                 "y": menu_y
             }
-            return processed_sentences, build_html(processed_sentences, synonyms_payload=synonyms_payload), ""
+            return processed_sentences, build_html(processed_sentences, valid_sentences=valid_sentences, synonyms_payload=synonyms_payload, current_page=current_page), ""
             
         elif action == "replace_word":
             s_idx = action_data["sentence_idx"]
@@ -707,7 +739,7 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
             reprocessed = process_sentence(new_text, latex_reg, is_latex)
             reprocessed["original_text"] = original_text
             processed_sentences[s_idx] = reprocessed
-            return processed_sentences, build_html(processed_sentences), ""
+            return processed_sentences, build_html(processed_sentences, valid_sentences=valid_sentences, current_page=current_page), ""
             
         elif action == "rewrite_sentence":
             s_idx = action_data["sentence_idx"]
@@ -730,12 +762,11 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
                     best_reprocessed = reprocessed
                     
                 if best_reprocessed["aiScore"] <= 30:
-                    print(f"[DEBUG] Punteggio valido raggiunto ({best_reprocessed['aiScore']}%) al tentativo {attempt+1}")
                     break
-            
+                    
             best_reprocessed["original_text"] = original_text
             processed_sentences[s_idx] = best_reprocessed
-            return processed_sentences, build_html(processed_sentences), ""
+            return processed_sentences, build_html(processed_sentences, valid_sentences=valid_sentences, current_page=current_page), ""
             
         elif action == "manual_edit":
             s_idx = action_data["sentence_idx"]
@@ -748,7 +779,7 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
             reprocessed = process_sentence(new_text, latex_reg, is_latex)
             reprocessed["original_text"] = original_text
             processed_sentences[s_idx] = reprocessed
-            return processed_sentences, build_html(processed_sentences), ""
+            return processed_sentences, build_html(processed_sentences, valid_sentences=valid_sentences, current_page=current_page), ""
             
     except Exception as e:
         import traceback
@@ -756,7 +787,7 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex):
         print(f"[DEBUG] ERRORE in handle_ui_action: {err}")
         return processed_sentences, f"<div style='color: red;'><b>ERRORE:</b><pre>{err}</pre></div>", ""
         
-    return processed_sentences, build_html(processed_sentences), ""
+    return processed_sentences, build_html(processed_sentences, valid_sentences=valid_sentences, current_page=current_page), ""
 
 def export_doc(processed_sentences, latex_reg, is_latex, original_text_masked):
     if not processed_sentences: return None
@@ -764,7 +795,7 @@ def export_doc(processed_sentences, latex_reg, is_latex, original_text_masked):
     # Ricostruiamo il testo mantenendo gli spazi e ritorni a capo originali
     final_text = original_text_masked
     for s in processed_sentences:
-        if s.get("original_text") and s.get("original_text") != s.get("text"):
+        if s is not None and s.get("original_text") and s.get("original_text") != s.get("text"):
             # Sostituiamo solo la prima occorrenza per evitare di sovrascrivere frasi identiche due volte
             final_text = final_text.replace(s["original_text"], s["text"], 1)
             
@@ -822,6 +853,7 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
     gr.Markdown("# 🖋️ HumanHumanHuman-nizer (Gradio ZeroGPU)")
     
     state_sentences = gr.State([])
+    state_valid_sentences = gr.State([])
     state_latex_reg = gr.State({})
     state_is_latex = gr.State(False)
     state_original_text = gr.State("")
@@ -834,19 +866,32 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
             export_btn = gr.DownloadButton("Scarica Documento Humanized 📥")
             
         with gr.Column(scale=2):
+            page_slider = gr.Slider(minimum=1, maximum=1, step=1, label="Pagina", visible=False)
             output_html = gr.HTML("<div style='color: #94a3b8; padding: 20px;'>L'analisi apparirà qui...</div>", elem_id="output_html")
             
     action_payload = gr.Textbox(elem_id="action_payload")
     
+    # Click analizza -> Init -> Analyze Page 1
     analyze_btn.click(
-        fn=do_stream_all,
+        fn=init_analysis,
         inputs=[file_input, text_input],
-        outputs=[state_sentences, output_html, state_latex_reg, state_is_latex, state_original_text]
+        outputs=[state_valid_sentences, state_sentences, page_slider, state_latex_reg, state_is_latex, state_original_text, output_html]
+    ).then(
+        fn=analyze_page,
+        inputs=[page_slider, state_valid_sentences, state_sentences, state_latex_reg, state_is_latex],
+        outputs=[state_sentences, output_html]
+    )
+    
+    # Cambio pagina -> Analyze Page
+    page_slider.change(
+        fn=analyze_page,
+        inputs=[page_slider, state_valid_sentences, state_sentences, state_latex_reg, state_is_latex],
+        outputs=[state_sentences, output_html]
     )
     
     action_payload.change(
         fn=handle_ui_action,
-        inputs=[action_payload, state_sentences, state_latex_reg, state_is_latex],
+        inputs=[action_payload, state_sentences, state_latex_reg, state_is_latex, state_valid_sentences, page_slider],
         outputs=[state_sentences, output_html, action_payload]
     )
     
