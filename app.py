@@ -291,7 +291,7 @@ def rewrite_with_mistral(text, sentence_data=None, temperature=0.7, lang="Italia
         return text
         
     lang_prompt = "italiano" if lang == "Italiano" else "inglese"
-    prompt = f"Modifica minimamente la seguente frase in {lang_prompt} sostituendo al massimo 1 o 2 parole con sinonimi perfetti per il contesto, mantenendo intatto tutto il resto. Testo originale:\n\n{text}"
+    prompt = f"Modifica minimamente la seguente frase in {lang_prompt} sostituendo al massimo 1 o 2 parole con sinonimi perfetti per il contesto, mantenendo intatto tutto il resto. NON aggiungere formattazioni markdown (niente asterischi o grassetti). Testo originale:\n\n{text}"
     
     if sentence_data:
         suggestions = []
@@ -478,6 +478,21 @@ def build_html(processed_sentences, valid_sentences=None, synonyms_payload=None,
                   }}
               }};
               sSpan.appendChild(btn_edit);
+              
+              if (s.original_text && s.original_text !== s.text) {{
+                  let btn_undo = document.createElement("div");
+                  btn_undo.className = "rewrite-btn";
+                  btn_undo.style.backgroundColor = "#ef4444";
+                  btn_undo.style.right = "240px";
+                  btn_undo.textContent = "↩️ Annulla";
+                  btn_undo.onclick = (e) => {{
+                      e.stopPropagation();
+                      btn_undo.textContent = "⏳ Ripristino...";
+                      btn_undo.style.pointerEvents = "none";
+                      sendToGradio({{ action: "undo", sentence_idx: sIdx + pageStartIdx }});
+                  }};
+                  sSpan.appendChild(btn_undo);
+              }}
               
               s.words.forEach((w, wIdx) => {{
                   let wSpan = document.createElement("span");
@@ -728,6 +743,8 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, vali
             s_idx = action_data["sentence_idx"]
             w_idx = action_data["word_idx"]
             new_word = action_data["new_word"]
+            
+            new_word = new_word.replace("**", "").replace("*", "").replace("`", "")
             print(f"[DEBUG] replace_word a frase {s_idx}, parola {w_idx} con '{new_word}'")
             
             s = processed_sentences[s_idx]
@@ -753,6 +770,7 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, vali
             for attempt in range(3):
                 temp = 0.7 + (attempt * 0.2)
                 new_text = rewrite_with_mistral(old_text, sentence_data=s_data, temperature=temp, lang=current_language)
+                new_text = new_text.replace("**", "").replace("*", "").replace("`", "")
                 print(f"[DEBUG] Tentativo {attempt+1} - Riscritto da Mistral: '{new_text}'")
                 
                 reprocessed = process_sentence(new_text, latex_reg, is_latex)
@@ -765,6 +783,18 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, vali
                     
             best_reprocessed["original_text"] = original_text
             processed_sentences[s_idx] = best_reprocessed
+            return processed_sentences, build_html(processed_sentences, valid_sentences=valid_sentences, current_page=current_page), ""
+            
+        elif action == "undo":
+            s_idx = action_data["sentence_idx"]
+            print(f"[DEBUG] undo a frase {s_idx}")
+            
+            s_data = processed_sentences[s_idx]
+            original_text = s_data.get("original_text", s_data["text"])
+            
+            reprocessed = process_sentence(original_text, latex_reg, is_latex)
+            reprocessed["original_text"] = original_text
+            processed_sentences[s_idx] = reprocessed
             return processed_sentences, build_html(processed_sentences, valid_sentences=valid_sentences, current_page=current_page), ""
             
         elif action == "manual_edit":
