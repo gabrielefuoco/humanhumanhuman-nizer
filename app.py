@@ -192,18 +192,21 @@ def process_sentence(sentence_text, latex_registry, is_latex):
         "aiScore": ai_score
     }
 
-def get_mistral_synonyms(word, context_sentence):
-    if not MISTRAL_API_KEY: return []
+def get_mistral_synonyms(word, context_sentence="", lang="Italiano"):
+    if not MISTRAL_API_KEY:
+        return []
     url = "https://api.mistral.ai/v1/chat/completions"
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
         "Authorization": f"Bearer {MISTRAL_API_KEY}"
     }
+    
+    lang_instruction = "Italiano" if lang == "Italiano" else "English"
     data = {
         "model": "mistral-small-latest",
         "messages": [
-            {"role": "system", "content": "Sei un dizionario dei sinonimi multilingua. Rileva la lingua della parola dal contesto e restituisci SOLO una lista di 5 sinonimi appropriati nella STESSA lingua. I sinonimi devono essere separati da virgola. Nessuna introduzione, nessuna spiegazione."},
+            {"role": "system", "content": f"Sei un dizionario dei sinonimi. Restituisci SOLO una lista di 5 sinonimi appropriati nella lingua {lang_instruction}. I sinonimi devono essere separati da virgola. Nessuna introduzione, nessuna spiegazione."},
             {"role": "user", "content": f"Fornisci 5 sinonimi per la parola '{word}' nel contesto di questa frase: '{context_sentence}'"}
         ]
     }
@@ -215,27 +218,21 @@ def get_mistral_synonyms(word, context_sentence):
     except:
         return []
 
-def get_offline_synonyms(word, context_sentence=""):
+def get_offline_synonyms(word, context_sentence="", lang="Italiano"):
     clean_word = "".join(c for c in word if c.isalpha()).lower()
     syns = set()
     
-    # Try English
-    synsets_eng = wn.synsets(clean_word, lang='eng')
-    for syn in synsets_eng:
-        for lemma in syn.lemma_names('eng'):
-            if lemma.lower() != clean_word:
-                syns.add(lemma.replace('_', ' '))
-                
-    # Try Italian
-    synsets_ita = wn.synsets(clean_word, lang='ita')
-    for syn in synsets_ita:
-        for lemma in syn.lemma_names('ita'):
+    wn_lang = 'ita' if lang == 'Italiano' else 'eng'
+    
+    synsets = wn.synsets(clean_word, lang=wn_lang)
+    for syn in synsets:
+        for lemma in syn.lemma_names(wn_lang):
             if lemma.lower() != clean_word:
                 syns.add(lemma.replace('_', ' '))
                 
     syns_list = list(syns)[:5]
     if not syns_list and context_sentence:
-        syns_list = get_mistral_synonyms(clean_word, context_sentence)
+        syns_list = get_mistral_synonyms(clean_word, context_sentence, lang)
     return syns_list
 
 
@@ -289,11 +286,12 @@ def calculate_synonym_scores(sentence_data, word_idx, synonyms):
     results.sort(key=lambda x: x["score"], reverse=True)
     return results
 
-def rewrite_with_mistral(text, sentence_data=None, temperature=0.7):
+def rewrite_with_mistral(text, sentence_data=None, temperature=0.7, lang="Italiano"):
     if not MISTRAL_API_KEY:
         return text
-    
-    prompt = f"Modifica minimamente la seguente frase sostituendo al massimo 1 o 2 parole con sinonimi perfetti per il contesto, mantenendo intatto tutto il resto. Testo originale:\n\n{text}"
+        
+    lang_prompt = "italiano" if lang == "Italiano" else "inglese"
+    prompt = f"Modifica minimamente la seguente frase in {lang_prompt} sostituendo al massimo 1 o 2 parole con sinonimi perfetti per il contesto, mantenendo intatto tutto il resto. Testo originale:\n\n{text}"
     
     if sentence_data:
         suggestions = []
@@ -468,6 +466,7 @@ def build_html(processed_sentences, valid_sentences=None, synonyms_payload=None,
               let btn_edit = document.createElement("div");
               btn_edit.className = "rewrite-btn";
               btn_edit.style.backgroundColor = "#475569";
+              btn_edit.style.right = "130px";
               btn_edit.textContent = "✏️ Modifica";
               btn_edit.onclick = (e) => {{
                   e.stopPropagation();
@@ -688,7 +687,7 @@ def analyze_page(page_num, valid_sentences, processed_sentences, latex_registry,
     print("[DEBUG] PAGINA COMPLETATA CON SUCCESSO")
 
 @spaces.GPU(duration=60)
-def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, valid_sentences, current_page):
+def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, valid_sentences, current_page, current_language):
     print("=" * 50)
     print(f"[DEBUG] handle_ui_action CHIAMATO con payload: {payload_str}")
     if not payload_str:
@@ -710,8 +709,8 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, vali
             menu_x = action_data.get("x", 0)
             menu_y = action_data.get("y", 0)
             
-            syns = get_mistral_synonyms(word, context_sentence)
-            print(f"[DEBUG] Sinonimi da Mistral: {syns}")
+            syns = get_offline_synonyms(word, context_sentence, current_language)
+            print(f"[DEBUG] Sinonimi da WordNet/Mistral: {syns}")
             
             syns_scores = calculate_synonym_scores(processed_sentences[s_idx], w_idx, syns)
             print(f"[DEBUG] Score calcolati: {syns_scores}")
@@ -753,7 +752,7 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, vali
             # Loop fino a 3 volte cercando un punteggio AI < 30%
             for attempt in range(3):
                 temp = 0.7 + (attempt * 0.2)
-                new_text = rewrite_with_mistral(old_text, sentence_data=s_data, temperature=temp)
+                new_text = rewrite_with_mistral(old_text, sentence_data=s_data, temperature=temp, lang=current_language)
                 print(f"[DEBUG] Tentativo {attempt+1} - Riscritto da Mistral: '{new_text}'")
                 
                 reprocessed = process_sentence(new_text, latex_reg, is_latex)
@@ -862,6 +861,7 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
         with gr.Column(scale=1):
             file_input = gr.File(label="Carica file (.txt, .docx, .tex)", file_types=[".txt", ".docx", ".tex"])
             text_input = gr.Textbox(label="O incolla il testo qui", lines=10)
+            state_language = gr.Radio(["Italiano", "English"], value="Italiano", label="Lingua Documento")
             analyze_btn = gr.Button("Analizza Testo 🚀", variant="primary")
             export_btn = gr.DownloadButton("Scarica Documento Humanized 📥")
             
@@ -891,7 +891,7 @@ with gr.Blocks(css=css, head=head_js, theme=gr.themes.Default(primary_hue="blue"
     
     action_payload.change(
         fn=handle_ui_action,
-        inputs=[action_payload, state_sentences, state_latex_reg, state_is_latex, state_valid_sentences, page_slider],
+        inputs=[action_payload, state_sentences, state_latex_reg, state_is_latex, state_valid_sentences, page_slider, state_language],
         outputs=[state_sentences, output_html, action_payload]
     )
     
