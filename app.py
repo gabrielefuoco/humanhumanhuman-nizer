@@ -713,7 +713,7 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, vali
             syns = get_mistral_synonyms(word, context_sentence)
             print(f"[DEBUG] Sinonimi da Mistral: {syns}")
             
-            syns_scores = evaluate_synonyms(word, syns, context_sentence, is_latex, latex_reg)
+            syns_scores = calculate_synonym_scores(processed_sentences[s_idx], w_idx, syns)
             print(f"[DEBUG] Score calcolati: {syns_scores}")
             
             synonyms_payload = {
