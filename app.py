@@ -297,7 +297,7 @@ def rewrite_with_mistral(text, sentence_data=None, temperature=0.7, lang="Italia
         suggestions = []
         for i, w_dict in enumerate(sentence_data["words"]):
             if w_dict.get("isLowPpl") or w_dict.get("isCliche"):
-                syns = get_offline_synonyms(w_dict["word"], text)
+                syns = get_offline_synonyms(w_dict["word"], text, lang)
                 if syns:
                     scores = calculate_synonym_scores(sentence_data, i, syns)
                     if scores:
