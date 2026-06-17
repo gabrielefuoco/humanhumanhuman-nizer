@@ -50,9 +50,12 @@ except Exception:
 
 AI_CLICHES = [
     "delve", "tapestry", "testament", "underscore", "vibrant", "landscape", "pivotal", "showcase", "intricate", "crucial",
-    "fostering", "garner", "highlight", "interplay", "emphasizing", "enduring", "enhance",
+    "fostering", "garner", "highlight", "interplay", "emphasizing", "enduring", "enhance", "multifaceted", "synergy", "paradigm",
+    "catalyst", "navigate", "realm", "unveil", "cornerstone", "essence", "dynamic", "robust", "meticulous", "nuanced",
     "approfondire", "arazzo", "testimonianza", "sottolineare", "vibrante", "panorama", "paesaggio", "cruciale", "mostrare", "intricato",
-    "promuovere", "raccogliere", "interazione", "enfatizzare", "duraturo", "migliorare", "immersione", "immergiamoci"
+    "promuovere", "raccogliere", "interazione", "enfatizzare", "duraturo", "migliorare", "immersione", "immergiamoci",
+    "poliedrico", "sinergia", "paradigma", "catalizzatore", "navigare", "regno", "svelare", "fondamento", "essenza", "dinamico",
+    "robusto", "meticoloso", "scrupoloso", "sfumato", "tuttavia", "inoltre", "infine", "complessivo", "affascinante", "sorprendente"
 ]
 
 SYSTEM_PROMPT_HUMANIZER = """
@@ -286,12 +289,20 @@ def calculate_synonym_scores(sentence_data, word_idx, synonyms):
     results.sort(key=lambda x: x["score"], reverse=True)
     return results
 
-def rewrite_with_mistral(text, sentence_data=None, temperature=0.7, lang="Italiano"):
+def rewrite_with_mistral(text, sentence_data=None, temperature=0.7, lang="Italiano", context_before="", context_after=""):
     if not MISTRAL_API_KEY:
         return text
         
     lang_prompt = "italiano" if lang == "Italiano" else "inglese"
-    prompt = f"Modifica minimamente la seguente frase in {lang_prompt} sostituendo al massimo 1 o 2 parole con sinonimi perfetti per il contesto, mantenendo intatto tutto il resto. NON aggiungere formattazioni markdown (niente asterischi o grassetti). Testo originale:\n\n{text}"
+    prompt = f"Modifica minimamente la seguente frase in {lang_prompt} sostituendo al massimo 1 o 2 parole con sinonimi perfetti per il contesto, mantenendo intatto tutto il resto. NON aggiungere formattazioni markdown (niente asterischi o grassetti).\n\n"
+    
+    if context_before or context_after:
+        prompt += f"CONTESTO PRECEDENTE: {context_before}\n" if context_before else ""
+        prompt += f"FRASE DA MODIFICARE: {text}\n"
+        prompt += f"CONTESTO SUCCESSIVO: {context_after}\n\n"
+        prompt += "Assicurati che la frase riscritta si colleghi in modo fluido al contesto precedente e successivo e restituisci SOLO la FRASE DA MODIFICARE, senza aggiungere altro."
+    else:
+        prompt += f"Testo originale:\n\n{text}"
     
     if sentence_data:
         suggestions = []
@@ -765,11 +776,22 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, vali
             s_data = processed_sentences[s_idx]
             original_text = s_data.get("original_text", old_text)
             
+            context_before = ""
+            context_after = ""
+            for i in range(s_idx - 1, -1, -1):
+                if processed_sentences[i] is not None:
+                    context_before = processed_sentences[i]["text"]
+                    break
+            for i in range(s_idx + 1, len(processed_sentences)):
+                if processed_sentences[i] is not None:
+                    context_after = processed_sentences[i]["text"]
+                    break
+            
             best_reprocessed = None
             # Loop fino a 3 volte cercando un punteggio AI < 30%
             for attempt in range(3):
                 temp = 0.7 + (attempt * 0.2)
-                new_text = rewrite_with_mistral(old_text, sentence_data=s_data, temperature=temp, lang=current_language)
+                new_text = rewrite_with_mistral(old_text, sentence_data=s_data, temperature=temp, lang=current_language, context_before=context_before, context_after=context_after)
                 new_text = new_text.replace("**", "").replace("*", "").replace("`", "")
                 print(f"[DEBUG] Tentativo {attempt+1} - Riscritto da Mistral: '{new_text}'")
                 
