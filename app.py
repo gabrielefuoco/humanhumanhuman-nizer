@@ -329,19 +329,38 @@ def rewrite_with_mistral(text, sentence_data=None, temperature=0.7, lang="Italia
         "Accept": "application/json",
         "Authorization": f"Bearer {MISTRAL_API_KEY}"
     }
+    import time
+    max_retries = 3
+    base_delay = 1
+    
     data = {
-        "model": "mistral-small-latest",
+        "model": "mistral-large-latest",
         "temperature": temperature,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT_HUMANIZER},
             {"role": "user", "content": prompt}
         ]
     }
+    
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(url, headers=headers, json=data)
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            delay = base_delay * (2 ** attempt)
+            print(f"[DEBUG] Errore mistral-large-latest (tentativo {attempt+1}/{max_retries}): {e}. Backoff {delay}s...")
+            time.sleep(delay)
+            
+    # Fallback a Mistral Small se Large fallisce ripetutamente
+    print("[DEBUG] Passaggio al fallback mistral-small-latest...")
+    data["model"] = "mistral-small-latest"
     try:
         response = requests.post(url, headers=headers, json=data)
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"].strip()
-    except:
+    except Exception as e2:
+        print(f"[DEBUG] Errore anche con mistral-small: {e2}")
         return text
 
 # --- FUNZIONI GRADIO ---
