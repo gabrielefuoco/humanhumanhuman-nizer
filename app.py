@@ -294,7 +294,8 @@ def rewrite_with_mistral(text, sentence_data=None, temperature=0.7, lang="Italia
         return text
         
     lang_prompt = "italiano" if lang == "Italiano" else "inglese"
-    prompt = f"Modifica minimamente la seguente frase in {lang_prompt} sostituendo al massimo 1 o 2 parole con sinonimi perfetti per il contesto, mantenendo intatto tutto il resto. NON aggiungere formattazioni markdown (niente asterischi o grassetti).\n\n"
+    prompt = f"Modifica minimamente la seguente frase in {lang_prompt} sostituendo al massimo 1 o 2 parole con sinonimi perfetti per il contesto, mantenendo intatto tutto il resto. NON aggiungere formattazioni markdown (niente asterischi o grassetti).\n"
+    prompt += "REGOLA FONDAMENTALE: Non modificare MAI i nomi propri, le entità e i termini tecnici/matematici specifici del dominio (es. 'fractional Laplacian', 'overdetermined problem', 'domain', 'singularity', ecc.). Questi devono restare assolutamente identici all'originale.\n\n"
     
     import re
     masks_in_text = re.findall(r'\[(?:MATH|CMD|CITE|BLOCK|COMMENT|PREAMBLE)_\d+\]', text)
