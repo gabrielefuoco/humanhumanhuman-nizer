@@ -1,4 +1,4 @@
-import re
+import regex as re
 
 def mask_latex(text: str):
     """
@@ -56,8 +56,8 @@ def mask_latex(text: str):
     # Comandi di spaziatura e box con parametri complessi (es. \vspace*{0.4cm}, \makebox[0pt][c]{...})
     text = re.sub(r'\\(?:vspace|hspace|makebox|parbox|rule|setlength|setcounter|addtolength)(\*?)(?:\[.*?\])*(?:\{.*?\})*', lambda m: replace_with_mask(m, "CMD"), text)
     
-    # 6. Formatting commands
-    text = re.sub(r'\\(?:textbf|textit|emph|underline|textsc|mathrm|mathbf|text|fontsize)\{[^{}]*\}', lambda m: replace_with_mask(m, "CMD"), text)
+    # 6. Formatting commands (using recursive regex to handle nested braces)
+    text = re.sub(r'\\(?:textbf|textit|emph|underline|textsc|mathrm|mathbf|text|fontsize)(\{(?:[^{}]+|(?1))*\})', lambda m: replace_with_mask(m, "CMD"), text)
     
     # Comandi senza parametri (es. \large, \rmfamily, \selectfont, \par, \noindent)
     text = re.sub(r'\\(?:large|Large|LARGE|huge|Huge|small|footnotesize|scriptsize|tiny|rmfamily|sffamily|ttfamily|mdseries|bfseries|upshape|itshape|slshape|scshape|selectfont|par|noindent|centering|twocolumn|onecolumn)\b', lambda m: replace_with_mask(m, "CMD"), text)

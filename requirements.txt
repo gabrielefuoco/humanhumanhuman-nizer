@@ -7,3 +7,4 @@ nltk
 python-docx
 gradio>=4.0.0
 spaces
+regex
