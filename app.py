@@ -481,12 +481,83 @@ def build_html(processed_sentences, valid_sentences=None, synonyms_payload=None,
               btn_edit.textContent = "✏️ Modifica";
               btn_edit.onclick = (e) => {{
                   e.stopPropagation();
-                  let manualText = prompt("Modifica manualmente la frase:", s.text);
-                  if (manualText !== null && manualText.trim() !== "" && manualText !== s.text) {{
-                      btn_edit.textContent = "⏳ Calcolo...";
-                      btn_edit.style.pointerEvents = "none";
-                      sendToGradio({{ action: "manual_edit", sentence_idx: sIdx + pageStartIdx, text: manualText.trim() }});
-                  }}
+                  let children = Array.from(sSpan.children);
+                  children.forEach(c => c.style.display = 'none');
+                  
+                  let editContainer = document.createElement("div");
+                  editContainer.style.width = "100%";
+                  editContainer.style.marginTop = "8px";
+                  editContainer.style.marginBottom = "8px";
+                  
+                  let textarea = document.createElement("textarea");
+                  textarea.value = s.text;
+                  textarea.style.width = "100%";
+                  textarea.style.minHeight = "80px";
+                  textarea.style.backgroundColor = "#0f172a";
+                  textarea.style.color = "#f8fafc";
+                  textarea.style.border = "1px solid #3b82f6";
+                  textarea.style.borderRadius = "6px";
+                  textarea.style.padding = "10px";
+                  textarea.style.fontFamily = "inherit";
+                  textarea.style.fontSize = "15px";
+                  textarea.style.lineHeight = "1.5";
+                  textarea.style.boxSizing = "border-box";
+                  textarea.style.resize = "vertical";
+                  
+                  let actionsDiv = document.createElement("div");
+                  actionsDiv.style.marginTop = "10px";
+                  actionsDiv.style.display = "flex";
+                  actionsDiv.style.gap = "10px";
+                  actionsDiv.style.justifyContent = "flex-end";
+                  
+                  let cancelBtn = document.createElement("button");
+                  cancelBtn.textContent = "❌ Annulla";
+                  cancelBtn.style.padding = "6px 14px";
+                  cancelBtn.style.backgroundColor = "#ef4444";
+                  cancelBtn.style.color = "white";
+                  cancelBtn.style.border = "none";
+                  cancelBtn.style.borderRadius = "6px";
+                  cancelBtn.style.cursor = "pointer";
+                  cancelBtn.style.fontWeight = "bold";
+                  
+                  let saveBtn = document.createElement("button");
+                  saveBtn.textContent = "💾 Salva Modifiche";
+                  saveBtn.style.padding = "6px 14px";
+                  saveBtn.style.backgroundColor = "#3b82f6";
+                  saveBtn.style.color = "white";
+                  saveBtn.style.border = "none";
+                  saveBtn.style.borderRadius = "6px";
+                  saveBtn.style.cursor = "pointer";
+                  saveBtn.style.fontWeight = "bold";
+                  
+                  saveBtn.onclick = (ev) => {{
+                      ev.stopPropagation();
+                      let manualText = textarea.value.trim();
+                      if (manualText !== "" && manualText !== s.text) {{
+                          saveBtn.textContent = "⏳ Calcolo...";
+                          saveBtn.style.pointerEvents = "none";
+                          cancelBtn.style.pointerEvents = "none";
+                          sendToGradio({{ action: "manual_edit", sentence_idx: sIdx + pageStartIdx, text: manualText }});
+                      }} else {{
+                          editContainer.remove();
+                          children.forEach(c => c.style.display = '');
+                      }}
+                  }};
+                  
+                  cancelBtn.onclick = (ev) => {{
+                      ev.stopPropagation();
+                      editContainer.remove();
+                      children.forEach(c => c.style.display = '');
+                  }};
+                  
+                  actionsDiv.appendChild(cancelBtn);
+                  actionsDiv.appendChild(saveBtn);
+                  editContainer.appendChild(textarea);
+                  editContainer.appendChild(actionsDiv);
+                  
+                  sSpan.appendChild(editContainer);
+                  textarea.focus();
+                  requestResize(150);
               }};
               sSpan.appendChild(btn_edit);
               
