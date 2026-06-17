@@ -296,6 +296,11 @@ def rewrite_with_mistral(text, sentence_data=None, temperature=0.7, lang="Italia
     lang_prompt = "italiano" if lang == "Italiano" else "inglese"
     prompt = f"Modifica minimamente la seguente frase in {lang_prompt} sostituendo al massimo 1 o 2 parole con sinonimi perfetti per il contesto, mantenendo intatto tutto il resto. NON aggiungere formattazioni markdown (niente asterischi o grassetti).\n\n"
     
+    import re
+    masks_in_text = re.findall(r'\[(?:MATH|CMD|CITE|BLOCK|COMMENT|PREAMBLE)_\d+\]', text)
+    if masks_in_text:
+        prompt += f"ATTENZIONE CRITICA: La frase contiene i seguenti segnaposto: {', '.join(masks_in_text)}. DEVI TASSATIVAMENTE includerli tutti nella tua risposta, esattamente come sono scritti e nella stessa posizione. Se li ometti o li modifichi, il sistema andrà in crash.\n\n"
+        
     if context_before or context_after:
         prompt += f"CONTESTO PRECEDENTE: {context_before}\n" if context_before else ""
         prompt += f"FRASE DA MODIFICARE: {text}\n"
@@ -858,13 +863,21 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, vali
                     context_after = processed_sentences[i]["text"]
                     break
             
+            import re
+            old_masks = set(re.findall(r'\[(?:MATH|CMD|CITE|BLOCK|COMMENT|PREAMBLE)_\d+\]', old_text))
+            
             best_reprocessed = None
-            # Loop fino a 3 volte cercando un punteggio AI < 30%
+            # Loop fino a 3 volte cercando un punteggio AI < 30% e maschere preservate
             for attempt in range(3):
                 temp = 0.7 + (attempt * 0.2)
                 new_text = rewrite_with_mistral(old_text, sentence_data=s_data, temperature=temp, lang=current_language, context_before=context_before, context_after=context_after)
                 new_text = new_text.replace("**", "").replace("*", "").replace("`", "")
                 print(f"[DEBUG] Tentativo {attempt+1} - Riscritto da Mistral: '{new_text}'")
+                
+                new_masks = set(re.findall(r'\[(?:MATH|CMD|CITE|BLOCK|COMMENT|PREAMBLE)_\d+\]', new_text))
+                if old_masks and not old_masks.issubset(new_masks):
+                    print(f"[DEBUG] Errore: Mistral ha perso delle maschere: {old_masks - new_masks}")
+                    continue
                 
                 reprocessed = process_sentence(new_text, latex_reg, is_latex)
                 
@@ -873,6 +886,10 @@ def handle_ui_action(payload_str, processed_sentences, latex_reg, is_latex, vali
                     
                 if best_reprocessed["aiScore"] <= 30:
                     break
+            
+            if best_reprocessed is None:
+                print("[DEBUG] Tutti i tentativi hanno fallito nel preservare le maschere. Annullamento.")
+                best_reprocessed = processed_sentences[s_idx]
                     
             best_reprocessed["original_text"] = original_text
             processed_sentences[s_idx] = best_reprocessed
