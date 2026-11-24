@@ -1,6 +1,6 @@
 # The Humanizer Pipeline
 
-Un'app Gradio che valuta un documento frase per frase sui due segnali che i rilevatori di testo AI approssimano — **perplexity** e **burstiness** — evidenzia le frasi che sembrano scritte da una macchina e le riscrive con modifiche minime e controllate. Costruita su un vincolo forte: il documento è una **tesi in LaTeX**, quindi una riscrittura che rompe una formula, una citazione o un termine tecnico è peggio di nessuna riscrittura.
+Un'app Gradio che valuta un documento frase per frase sui due segnali che i rilevatori di testo AI approssimano — **perplexity** e **burstiness** — evidenzia le frasi che sembrano scritte da una macchina e le riscrive con modifiche minime e controllate. Costruita su un vincolo forte: il documento è **LaTeX**, quindi una riscrittura che rompe una formula, una citazione o un termine tecnico è peggio di nessuna riscrittura.
 
 ## Indice
 
@@ -36,13 +36,13 @@ Il prompt di riscrittura impone la stessa regola dal lato del modello: la frase 
 
 ### I vincoli che disegnano l'interfaccia
 
-L'app gira su uno Space di Hugging Face con **ZeroGPU**: il tempo di GPU è concesso in budget fissi (120 s per l'analisi, 60 s per le azioni), ed è per questo che la misura è paginata a **20 frasi per pagina** invece di elaborare una tesi intera in una chiamata. L'ingresso accetta testo incollato, `.docx` o `.tex`, e il risultato si esporta.
+L'app gira su uno Space di Hugging Face con **ZeroGPU**: il tempo di GPU è concesso in budget fissi (120 s per l'analisi, 60 s per le azioni), ed è per questo che la misura è paginata a **20 frasi per pagina** invece di elaborare un documento intero in una chiamata. L'ingresso accetta testo incollato, `.docx` o `.tex`, e il risultato si esporta.
 
 ## Decisioni
 
 **Prima mascherare, poi riscrivere.** Il disegno ovvio — mandare il testo a un modello e sostituire l'output — distrugge il LaTeX. Mascherare trasforma un problema di generazione aperta in un problema di sostituzione limitata, e rende l'invariante verificabile: quello che è entrato esce, segnaposto compresi.
 
-**Modifiche minime invece di rigenerazione.** Il prompt chiede al massimo una o due sostituzioni di sinonimi e vieta di toccare il resto. Rigenerare riscriverebbe l'argomentazione; una tesi non è un post, e la formulazione dell'autore fa parte della tesi.
+**Modifiche minime invece di rigenerazione.** Il prompt chiede al massimo una o due sostituzioni di sinonimi e vieta di toccare il resto. Rigenerare riscriverebbe la formulazione dell'autore; in un documento LaTeX le parole fanno parte del contenuto.
 
 **Punteggi per frase invece di un punteggio di documento.** Una perplexity unica non dice dove intervenire. Venti frasi per pagina con un valore ciascuna trasformano la metrica in una lista di cose da fare.
 
@@ -84,7 +84,7 @@ Senza la chiave funziona tutto tranne la riscrittura e i sinonimi via Mistral: `
 | Lo strumento ottimizza un proxy | bassa perplexity e alta varianza correlano con i rilevatori, non con la buona scrittura | accettato, dichiarato |
 | Solo italiano e inglese | prompt e guardie sono scritti in queste due lingue | aperto |
 | Le maschere LaTeX sono posizionali | una riscrittura che riordina la frase attorno a un segnaposto può produrre output strano | aperto |
-| La misura sull'intero documento è paginata | una tesi richiede diversi clic, imposto dal budget ZeroGPU | accettato |
+| La misura sull'intero documento è paginata | un documento lungo richiede diversi clic, imposto dal budget ZeroGPU | accettato |
 | Nessun test automatico | gli invarianti si controllano a occhio sul documento esportato | aperto |
 
 Una nota che sta nel README e non in un messaggio di commit: l'uso onesto di questo strumento è riscrivere un proprio testo perché si legga meglio. Ottimizzare contro un rilevatore significa ottimizzare contro un proxy, e il proxy è debole in entrambe le direzioni — segnala come scritte da una macchina le prose di autori non madrelingua e di classici, e accetta come umano un testo automatico corretto a mano.

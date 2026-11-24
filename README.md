@@ -10,7 +10,7 @@ app_port: 7860
 
 # The Humanizer Pipeline
 
-A Gradio app that scores a document sentence by sentence on the two signals AI-text detectors approximate — **perplexity** and **burstiness** — highlights the sentences that look machine-written, and rewrites them with minimal, controlled edits. Built for a hard constraint: the document is a **LaTeX thesis**, so a rewrite that breaks a formula, a citation or a technical term is worse than no rewrite at all.
+A Gradio app that scores a document sentence by sentence on the two signals AI-text detectors approximate — **perplexity** and **burstiness** — highlights the sentences that look machine-written, and rewrites them with minimal, controlled edits. Built for a hard constraint: the document is **LaTeX**, so a rewrite that breaks a formula, a citation or a technical term is worse than no rewrite at all.
 
 ## Table of contents
 
@@ -46,13 +46,13 @@ The rewrite prompt enforces the same rule from the model's side: the returned se
 
 ### The constraints that shape the UI
 
-The app runs on a Hugging Face Space with **ZeroGPU**: GPU time is granted in fixed budgets (120 s for analysis, 60 s for actions), which is why scoring is paginated at **20 sentences per page** instead of processing a whole thesis in one call. Input is accepted as pasted text, `.docx` or `.tex`, and the result can be exported.
+The app runs on a Hugging Face Space with **ZeroGPU**: GPU time is granted in fixed budgets (120 s for analysis, 60 s for actions), which is why scoring is paginated at **20 sentences per page** instead of processing a whole document in one call. Input is accepted as pasted text, `.docx` or `.tex`, and the result can be exported.
 
 ## Decisions
 
 **Mask first, rewrite second.** The obvious design — send the text to a model and replace the output — destroys LaTeX. Masking turns an open-ended generation problem into a bounded substitution problem, and makes the invariant checkable: what went in comes out, placeholders included.
 
-**Minimal edits instead of regeneration.** The prompt asks for at most one or two synonym substitutions and forbids touching the rest. Regeneration would rewrite the argument; a thesis is not a blog post, and the author's phrasing is part of the claim.
+**Minimal edits instead of regeneration.** The prompt asks for at most one or two synonym substitutions and forbids touching the rest. Regeneration would rewrite the author's own phrasing; in a LaTeX document the wording is part of the content.
 
 **Per-sentence scores instead of a document score.** A single perplexity number tells you nothing about where to intervene. Twenty sentences per page with a value each turns the metric into a to-do list.
 
@@ -94,7 +94,7 @@ Without the key everything except the Mistral rewrite and the Mistral synonyms s
 | The tool optimises a proxy | low perplexity and high variance correlate with detectors, not with good writing | accepted, stated |
 | Italian and English only | prompts and prompts' guards are written in these two languages | open |
 | LaTeX masks are positional | a rewrite that reorders a sentence around a placeholder can still produce odd output | open |
-| Whole-document scoring is paginated | a thesis needs several clicks, forced by the ZeroGPU budget | accepted |
+| Whole-document scoring is paginated | a long document needs several clicks, forced by the ZeroGPU budget | accepted |
 | No automated tests | the invariants are checked by eye on the exported document | open |
 
 One note that belongs in the README rather than in a commit message: the honest use of this tool is rewriting your own text so it reads better. Optimising against a detector optimises against a proxy, and the proxy is weak in both directions — it flags non-native writers and classical authors as machine-written, and it accepts machine writing edited by hand as human.
