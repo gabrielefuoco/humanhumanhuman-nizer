@@ -32,7 +32,7 @@ Prima che giri qualsiasi modello, `apply_algorithmic_rules()` intercetta i tic m
 
 `latex_parser.py` maschera cinque tipi di struttura prima che succeda qualsiasi cosa: preambolo, blocchi, matematica inline, citazioni e comandi strutturali. Ognuno diventa un segnaposto come `[MATH_3]`, e un registro conserva il testo originale. Tutta la misura e la riscrittura avvengono sul testo mascherato; i segnaposto vengono ripristinati in uscita.
 
-Il prompt di riscrittura impone la stessa regola dal lato del modello: la frase restituita deve contenere ogni segnaposto esattamente come ricevuto, e non deve toccare nomi propri né termini di dominio — *fractional Laplacian*, *overdetermined problem*, *domain*, *singularity*. Un segnaposto mancante è un documento corrotto, e il prompt lo dichiara.
+Il prompt di riscrittura impone la stessa regola dal lato del modello: la frase restituita deve contenere ogni segnaposto esattamente come ricevuto, e non deve toccare nomi propri né i termini tecnici del dominio. Un segnaposto mancante è un documento corrotto, e il prompt lo dichiara.
 
 ### I vincoli che disegnano l'interfaccia
 
@@ -57,7 +57,7 @@ L'app gira su uno Space di Hugging Face con **ZeroGPU**: il tempo di GPU è conc
 ```
 app.py            interfaccia Gradio, misura, ricerca sinonimi, riscrittura, export
 latex_parser.py   maschera e ripristina preambolo, matematica, citazioni, comandi, commenti
-main.tex          un documento reale di matematica da 3.258 righe usato come caso di lavoro
+sample.tex        un piccolo documento LaTeX che esercita ogni struttura mascherata dal parser
 requirements.txt  gradio, spaces, transformers, torch, nltk, python-docx, regex
 todo.md           note di lavoro: la conversazione di progetto dietro la pipeline
 ```

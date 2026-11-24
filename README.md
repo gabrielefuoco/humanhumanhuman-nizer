@@ -42,7 +42,7 @@ Before any model runs, `apply_algorithmic_rules()` catches the mechanical tells 
 
 `latex_parser.py` masks five kinds of structure before anything else happens: the preamble, display blocks, inline math, citations and structural commands. Each becomes a placeholder like `[MATH_3]`, and a registry keeps the original text. All scoring and rewriting happens on the masked text; the placeholders are restored on the way out.
 
-The rewrite prompt enforces the same rule from the model's side: the returned sentence must contain every placeholder exactly as received, and must never touch proper nouns or domain terms — *fractional Laplacian*, *overdetermined problem*, *domain*, *singularity*. A missing placeholder is a corrupted document, so the prompt warns that the system will break.
+The rewrite prompt enforces the same rule from the model's side: the returned sentence must contain every placeholder exactly as received, and must never touch proper nouns or the technical terms of the domain. A missing placeholder is a corrupted document, so the prompt warns that the system will break.
 
 ### The constraints that shape the UI
 
@@ -67,7 +67,7 @@ The app runs on a Hugging Face Space with **ZeroGPU**: GPU time is granted in fi
 ```
 app.py            Gradio UI, scoring, synonym search, rewrite calls, export
 latex_parser.py   masks and restores preamble, math, citations, commands, comments
-main.tex          a real 3,258-line mathematics document used as the working case
+sample.tex        a small LaTeX document exercising every structure the parser masks
 requirements.txt  gradio, spaces, transformers, torch, nltk, python-docx, regex
 todo.md           working notes: the design conversation behind the pipeline
 ```

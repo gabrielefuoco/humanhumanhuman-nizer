@@ -1,0 +1,37 @@
+% sample.tex — a small document that exercises every structure the parser masks.
+% It contains, on purpose: a preamble, a display block, inline math, citations,
+% structural commands and comments.
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+
+\title{A Sample Document}
+\author{Author Name}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Let $x \in \mathbb{R}^{n}$ be a vector and let $f \colon \mathbb{R}^{n} \to \mathbb{R}$ be a smooth
+function. We study the minimisers of the functional
+\[
+  J(u) = \int_{\Omega} \left( \tfrac{1}{2} \lvert \nabla u \rvert^{2} + V(u) \right) \, dx,
+\]
+under homogeneous boundary conditions. A classical reference is \cite{evans1998}.
+
+\section{Results}
+The main statement follows from a standard compactness argument; see \cite{brezis2011}
+for the details. % TODO: check the constant in the estimate
+
+\begin{equation}
+  \lVert u \rVert_{H^{1}_{0}(\Omega)} \le C \, \lVert f \rVert_{L^{2}(\Omega)}.
+  \label{eq:estimate}
+\end{equation}
+
+By \eqref{eq:estimate} the solution depends continuously on the data.
+
+\end{document}
