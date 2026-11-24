@@ -69,7 +69,6 @@ app.py            Gradio UI, scoring, synonym search, rewrite calls, export
 latex_parser.py   masks and restores preamble, math, citations, commands, comments
 sample.tex        a small LaTeX document exercising every structure the parser masks
 requirements.txt  gradio, spaces, transformers, torch, nltk, python-docx, regex
-todo.md           working notes: the design conversation behind the pipeline
 ```
 
 ## Running it

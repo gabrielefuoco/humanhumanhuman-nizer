@@ -59,7 +59,6 @@ app.py            interfaccia Gradio, misura, ricerca sinonimi, riscrittura, exp
 latex_parser.py   maschera e ripristina preambolo, matematica, citazioni, comandi, commenti
 sample.tex        un piccolo documento LaTeX che esercita ogni struttura mascherata dal parser
 requirements.txt  gradio, spaces, transformers, torch, nltk, python-docx, regex
-todo.md           note di lavoro: la conversazione di progetto dietro la pipeline
 ```
 
 ## Eseguirla
